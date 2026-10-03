@@ -1,0 +1,38 @@
+{
+  "name": "makeng",
+  "type": "module",
+  "private": true,
+  "packageManager": "pnpm@11.19.0",
+  "engines": {
+    "node": ">=24.0.0 <25"
+  },
+  "scripts": {
+    "dev": "concurrently -k -n web,worker \"pnpm --filter @makeng/web dev\" \"pnpm worker\"",
+    "worker": "tsx apps/worker/index.ts",
+    "build": "pnpm --filter @makeng/web build",
+    "start": "concurrently -k -n web,worker \"pnpm --filter @makeng/web start\" \"pnpm worker\"",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "format": "prettier --write apps packages tests *.json *.ts *.mjs pnpm-workspace.yaml .github",
+    "format:check": "prettier --check apps packages tests *.json *.ts *.mjs pnpm-workspace.yaml .github",
+    "test": "vitest run",
+    "test:e2e": "playwright test"
+  },
+  "dependencies": {
+    "zod": "4.6.5"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.1",
+    "@playwright/test": "^1.58.0",
+    "@types/node": "^24.0.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "concurrently": "^9.2.0",
+    "eslint": "^9.39.1",
+    "prettier": "3.7.4",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.48.0",
+    "vitest": "5.0.3"
+  }
+}
