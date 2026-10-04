@@ -1,12 +1,11 @@
-export class ApiError extends Error {
-  constructor(
-    message: string,
-    public code: string,
-  ) {
-    super(message);
-  }
-}
+import { ApiError } from "../../../packages/domain/errors";
+import { browserDemo } from "./mode";
+export { ApiError };
 export async function api<T>(path: string, init?: RequestInit): Promise<T> {
+  if (browserDemo) {
+    const { demoRequest } = await import("../../../packages/demo/store");
+    return (await demoRequest(path, init)) as T;
+  }
   const response = await fetch(`/api/v1/${path}`, {
     ...init,
     headers: { "Content-Type": "application/json", ...init?.headers },

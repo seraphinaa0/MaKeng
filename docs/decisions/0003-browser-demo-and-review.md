@@ -1,0 +1,9 @@
+# ADR 0003 — Browser demo and Reading authoring
+
+The user selected a browser-only Vercel demo, then requested Phase 2 verification and Phase 3 with UI. The existing SQLite API and persistent worker cannot serve that deployment unchanged. Default the web build to browser demo; `NEXT_PUBLIC_MAKENG_DEMO=false` retains the original local API/worker workflow. Never silently fall back between storage modes. In demo mode the server API is disabled before opening a database.
+
+Persist versioned, schema-validated demo state in localStorage, serialize operations across tabs with Web Locks, and reject stale revisions. Storage errors must preserve existing data and surface an actionable error. No user essay/source is sent to an API. Demo answer keys are necessarily in the browser: this is not a secure examination system. Data is per origin/browser, is not synced or backed up, and can be exported or deleted.
+
+Phase 3 is a local workflow prototype: original user-authored sources only, normalization, deterministic mock generation for MCQ/TFNG/completion, editable questions/solutions/evidence, structural checks, explicit approval and separate publication, rejection reason, bounded regeneration, immutable published versions and attempt snapshots. Published demo content requires a named local reviewer and acknowledgement, not an authenticated reviewer role. Seed previews stay clearly labelled and separate from reviewed local content. No auto-publish, no claims of AI quality evaluation or teacher validation.
+
+Supabase Auth/RLS, durable cloud jobs, real generation/quality providers, teacher benchmarks, and shared publishing remain prerequisites for the full Phase 3 beta. This ADR does not declare those complete. The server-backed mode remains Phase 1/2 only; authoring is available in browser demo mode.

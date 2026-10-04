@@ -12,7 +12,7 @@ Ba thuộc tính chính:
 
 ## 2. Nguyên tắc UI
 
-Theo phản hồi sử dụng đầu tiên, giao diện ưu tiên tối giản: thanh điều hướng ngang chỉ có Writing và Reading; bỏ sidebar, slogan và các khối trang trí. Writing dùng một cột theo thứ tự chọn đề → viết → nộp. Reading có thư viện bài ngắn; trên điện thoại chuyển giữa Bài đọc và Câu hỏi bằng hai nút rõ ràng. Lịch sử đặt cạnh thao tác luyện tập, trạng thái lưu được hiển thị ngay gần câu trả lời.
+Theo phản hồi sử dụng đầu tiên, giao diện ưu tiên tối giản: thanh điều hướng ngang có Writing, Reading và Tạo đề; bỏ sidebar, slogan và các khối trang trí. Writing dùng một cột theo thứ tự chọn đề → viết → nộp. Reading có thư viện bài ngắn; trên điện thoại chuyển giữa Bài đọc và Câu hỏi bằng hai nút rõ ràng. Lịch sử đặt cạnh thao tác luyện tập, trạng thái lưu được hiển thị ngay gần câu trả lời.
 
 - Một màn hình có một primary action rõ ràng.
 - Reading và Writing ưu tiên độ dễ đọc hơn mật độ tính năng.
@@ -102,6 +102,8 @@ mono
 - `ProvenanceSummary`.
 
 ## 7. Writing experience
+
+Phase 3 bổ sung mục điều hướng **Tạo đề** (`/create`), form nhập nguồn và màn hình duyệt hai cột trên desktop/một cột trên mobile. Trạng thái chưa lưu, chờ duyệt, bị từ chối, đã duyệt và đã phát hành tách biệt bằng chữ; duyệt không tự phát hành. Banner toàn app giải thích giới hạn demo trình duyệt.
 
 - Prompt luôn còn nhìn thấy hoặc mở lại nhanh được.
 - Word count cập nhật trực tiếp nhưng không gây cảnh báo liên tục.

@@ -17,8 +17,10 @@ jobs:
       - run: pnpm format:check
       - run: pnpm typecheck
       - run: pnpm test
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm test:e2e
       - run: pnpm build
         env:
           NEXT_TELEMETRY_DISABLED: "1"
-      - run: pnpm exec playwright install --with-deps chromium
-      - run: pnpm test:e2e
+          NEXT_PUBLIC_MAKENG_DEMO: "true"
+      - run: pnpm test:e2e:demo

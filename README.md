@@ -1,10 +1,33 @@
 # MaKeng
 
-Không gian luyện IELTS độc lập. Bản đầu tiên triển khai luồng Writing Task 2 chạy local: chọn đề, viết và lưu nháp, nộp bài, xử lý qua worker, xem feedback, xem lịch sử, export và xóa bài.
+Không gian luyện IELTS độc lập. Mặc định là demo Writing, Reading và Tạo đề lưu trong trình duyệt, không cần API AI hoặc database. Chế độ API SQLite + worker cũ vẫn dùng được khi đặt `NEXT_PUBLIC_MAKENG_DEMO=false` trước khi chạy/build.
 
-Giao diện hiện dùng hai mục **Writing** và **Reading**. Writing được rút gọn thành một cột. Reading tại `/reading` có 5 bài mẫu gốc, mỗi bài 5 câu: trắc nghiệm, True/False/Not Given và điền từ. Đây là các bài luyện ngắn có tình huống hư cấu, chưa được giáo viên duyệt hoặc hiệu chuẩn độ khó IELTS.
+Giao diện gồm **Writing**, **Reading** và **Tạo đề**. Writing có một cột. Reading tại `/reading` có 5 bài mẫu gốc, mỗi bài 5 câu: trắc nghiệm, True/False/Not Given và điền từ. Bài mẫu có tình huống hư cấu, chưa được giáo viên duyệt hoặc hiệu chuẩn độ khó IELTS.
+
+## Demo Vercel và Phase 3
+
+- Web mặc định không gọi `/api/v1`; API trả `503 DEMO_ONLY` trước khi mở database. Không chạy worker trên Vercel.
+- Dữ liệu trong localStorage riêng theo browser/origin. Đổi domain, trình duyệt hoặc xóa dữ liệu website sẽ không thấy lịch sử cũ. Không tự di chuyển dữ liệu SQLite sang demo. Không gửi essay/source tới AI hay API.
+- Cần HTTPS (hoặc localhost) và trình duyệt hiện đại hỗ trợ Web Locks. Ghi dữ liệu được khóa giữa các tab, kiểm tra revision, và báo lỗi khi storage bị chặn/đầy. Dữ liệu hỏng không bị ghi đè tự động.
+- Answer key nằm trong browser bundle/storage: chỉ phù hợp luyện thử, không dùng làm hệ thống thi bảo mật. Không có tài khoản, phân quyền reviewer hay đồng bộ cloud.
+- Trong Vercel chọn framework Next.js, root `apps/web`, dùng lockfile/workspace ở repo root. Giữ mặc định demo hoặc đặt `NEXT_PUBLIC_MAKENG_DEMO=true` và **rebuild**. Node.js 24.x; không nhập AI key.
+- Không đưa `.data`, `.env` hay dữ liệu local lên deployment. Chưa xác nhận deployment public sau thay đổi này.
+
+Tại `/create`:
+
+1. Nhập tiêu đề, tác giả, văn bản tiếng Anh gốc (100–15.000 ký tự) và xác nhận sở hữu. Hiện chỉ hỗ trợ nguồn do chính người dùng sở hữu, không import PDF/URL hoặc nội dung có bản quyền bên thứ ba.
+2. Tạo 3 câu mẫu bằng quy tắc (MCQ, TFNG, completion). Đây **không phải AI generation**; cần sửa distractors/độ khó. Nguồn được chuẩn hóa thành đoạn và evidence offsets.
+3. Sửa câu hỏi, lựa chọn, đáp án, giới hạn từ, giải thích và trích dẫn. Lưu sửa đổi; kiểm tra cấu trúc không thay thế kiểm tra ý nghĩa. Trước khi lưu, bản sửa chỉ nằm trong bộ nhớ trang; có thể tải JSON để sao lưu.
+4. Có thể từ chối kèm lý do, sửa lại, hoặc tạo lại tối đa 3 lần tổng cộng trên mỗi revision nội dung. Tạo lại thay thế câu hỏi và cần xác nhận.
+5. Nhập tên người tự duyệt, xác nhận kiểm tra, bấm **Duyệt bản nháp** rồi **Phát hành trên thiết bị**. Chỉ lúc này bài xuất hiện trong thư viện Reading; draft chưa duyệt không xuất hiện. Đây là self-review demo, không phải quyền reviewer được xác thực.
+6. Bản đã phát hành bị khóa; tạo phiên bản mới để sửa. Thư viện dùng bản published mới nhất; attempt đang làm giữ snapshot cũ. Nhật ký lưu thao tác, thời gian, tên reviewer/lý do.
+7. **Xuất dữ liệu demo** tải JSON để sao lưu (chưa có UI import/restore); **Xóa dữ liệu demo** xóa bộ nhớ demo và bản nháp luyện tập sau xác nhận. Writing cũng có xóa toàn bộ dữ liệu phiên.
+
+AI quality evaluator, durable generation jobs, Supabase/RLS, benchmark giáo viên và shared publish chưa triển khai. Xem [ADR 0003](docs/decisions/0003-browser-demo-and-review.md).
 
 ## Reading — Phase 2 local
+
+Mục này mô tả chế độ API local. Demo giữ cùng giao diện practice nhưng báo “Đã lưu trong trình duyệt” và chấm trực tiếp trên thiết bị; đáp án không được bảo mật phía server.
 
 1. Chọn Reading → Làm bài. Nếu đã có bài chưa nộp, hệ thống tiếp tục bài đó.
 2. Trả lời câu hỏi, đánh dấu câu cần xem lại. Trên điện thoại dùng nút Bài đọc/Câu hỏi.
@@ -28,14 +51,24 @@ pnpm install --frozen-lockfile
 pnpm dev
 ```
 
-Lệnh `dev` chạy Next.js trên loopback port 3000 và worker trong cùng terminal. Dừng bằng Ctrl+C. Không mở port ra Internet: đây là adapter dành cho một máy phát triển.
+Lệnh `dev` chạy Next.js demo trên loopback port 3000, không chạy worker. Dừng bằng Ctrl+C.
 
 ```sh
 pnpm build
 pnpm start
 ```
 
-`start` cũng chạy cả web và worker. Nếu chỉ chạy web, bài vẫn được lưu và nằm ở trạng thái chờ cho tới khi `pnpm worker` hoạt động.
+`start` chạy web demo từ build trước đó. Để dùng API SQLite + worker cũ (không triển khai lên Vercel):
+
+```sh
+export NEXT_PUBLIC_MAKENG_DEMO=false
+pnpm dev:local
+# Hoặc production local:
+pnpm build
+pnpm start:local
+```
+
+Các lệnh `export` là cú pháp bash; PowerShell dùng `$env:NEXT_PUBLIC_MAKENG_DEMO="false"`. API và worker bên dưới chỉ áp dụng chế độ local. Không mở adapter SQLite ra Internet.
 
 Database mặc định nằm ở `.data/makeng.sqlite` tại root repo, ngoài Git. Migration `packages/db/migrations/001-writing.sql` chạy tự động khi mở database mới. Web và worker phải cùng truy cập một database. Nếu cần đường dẫn khác, đặt biến môi trường được export cho cả hai process:
 
@@ -54,12 +87,12 @@ pnpm install --frozen-lockfile
 pnpm dev
 ```
 
-## Cách thử
+## Cách thử Writing
 
 1. Chọn một trong ba đề gốc hoặc nhập đề của bạn.
 2. Viết bài bằng tiếng Anh. Nháp tự lưu vào localStorage của trình duyệt; chờ nhãn “Đã lưu nháp” trước khi tải lại trang.
 3. Xác nhận lưu dữ liệu local và chọn “Lưu & xem phản hồi mẫu”.
-4. API lưu bài và job trong một transaction rồi trả `202`. Worker xử lý và UI cập nhật bằng polling.
+4. Demo lưu bài và phản hồi mẫu trong trình duyệt. Chế độ local dùng API lưu bài và job trong transaction rồi trả `202`; worker xử lý và UI cập nhật bằng polling.
 5. Xem bốn tiêu chí, trích dẫn nguyên văn, gợi ý luyện tập; mở lại bài từ lịch sử.
 6. Tải JSON của từng bài, xóa một bài hoặc xóa toàn bộ phiên từ lịch sử.
 
@@ -72,12 +105,13 @@ pnpm lint
 pnpm format:check
 pnpm typecheck
 pnpm test
-pnpm build
 pnpm exec playwright install chromium
 pnpm test:e2e
+NEXT_PUBLIC_MAKENG_DEMO=true pnpm build
+pnpm test:e2e:demo
 ```
 
-E2E khởi chạy web và worker riêng trên port 3100, dùng database tạm độc lập. Nếu Chromium đã có sẵn trên máy và download bị hạn chế:
+E2E local khởi chạy web và worker riêng trên port 3100, dùng database tạm độc lập. E2E demo dùng production build trên port 3400, không worker, chặn mọi request `/api` để kiểm tra độc lập backend. Chạy tuần tự do dùng cùng thư mục build Next.js. Nếu Chromium đã có sẵn trên máy và download bị hạn chế:
 
 ```sh
 PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium pnpm test:e2e
@@ -85,7 +119,7 @@ PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium pnpm test:e2e
 
 Các test kiểm tra consent/schema, evidence, tính band, ownership, idempotency, rate limit, persistence qua connection mới, worker lease/retry/timeout, xóa bài đang xử lý, và luồng browser desktop/mobile. CI không gọi AI thật.
 
-## API hiện có
+## API hiện có (chỉ khi tắt demo)
 
 | Method | Endpoint | Hành vi |
 | --- | --- | --- |
@@ -99,7 +133,7 @@ Các test kiểm tra consent/schema, evidence, tính band, ownership, idempotenc
 
 Mutation cần cùng origin với web; POST submission cần header `Idempotency-Key` dạng UUID và JSON `{ prompt, essay, consent: true }`. Giới hạn payload 64 KB, đề 3.000 ký tự, bài 20.000 ký tự, 10 yêu cầu tạo/thử lại mỗi giờ mỗi phiên. Retry transient dùng backoff + jitter; validation failure không tự retry. Worker timeout 30 giây, lease 60 giây, tối đa 3 attempts. `model_runs` ghi hash input, phiên bản, token usage, latency và cost (mock bằng 0).
 
-## Dữ liệu và giới hạn hiện tại
+## Dữ liệu và giới hạn chế độ API local
 
 - Phiên dùng cookie ngẫu nhiên HttpOnly, SameSite Strict; server lưu hash và kiểm tra ownership cho từng request. Đây không phải tài khoản Supabase. Phiên có hiệu lực 30 ngày tính từ lúc tạo; xóa cookie hoặc đổi trình duyệt sẽ không truy cập lại lịch sử cũ.
 - Bản nháp ở localStorage; bài đã nộp, consent version và kết quả ở SQLite. Không có encryption at rest hoặc cơ chế recovery tài khoản trong slice này.

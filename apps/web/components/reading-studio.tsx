@@ -7,6 +7,8 @@ import type {
 } from "../../../packages/schemas/reading";
 import { api } from "./api";
 import ReadingPlayer from "./reading-player";
+import Link from "next/link";
+import { typeLabels } from "../../../packages/domain/reading";
 
 export default function ReadingStudio() {
   const [sessionId, setSessionId] = useState("");
@@ -106,6 +108,7 @@ export default function ReadingStudio() {
         <p>Đọc bài, trả lời câu hỏi và xem giải thích sau khi nộp.</p>
       </div>
       <div className="toolbar">
+        <Link href="/create">Tạo bài Reading</Link>
         <button
           aria-pressed={!attempt && view === "library"}
           onClick={() => navigate("library")}
@@ -126,7 +129,7 @@ export default function ReadingStudio() {
         </div>
       )}
       {!ready ? (
-        <p role="status">Đang tải…</p>
+        !error && <p role="status">Đang tải…</p>
       ) : attempt ? (
         <ReadingPlayer
           key={`${attempt.id}:${attempt.status}:${attempt.revision}`}
@@ -185,8 +188,8 @@ export default function ReadingStudio() {
       ) : (
         <>
           <p className="notice">
-            5 bài luyện ngắn tự tạo · Nội dung thử nghiệm, chưa được giáo viên
-            duyệt. Không phải đề IELTS chính thức.
+            Bài tự duyệt trên thiết bị và 5 bài mẫu thử nghiệm chưa được giáo
+            viên duyệt. Không phải đề IELTS chính thức.
           </p>
           <div className="library">
             {sets.map((set) => (
@@ -197,8 +200,15 @@ export default function ReadingStudio() {
                     {set.questions.length} câu · {set.minutes} phút gợi ý
                   </p>
                   <small>
-                    Trắc nghiệm · True / False / Not Given · Điền từ
+                    {[
+                      ...new Set(set.questions.map((q) => typeLabels[q.type])),
+                    ].join(" · ")}
                   </small>
+                  <p className="muted">
+                    {set.publication === "published"
+                      ? `Đã tự duyệt trên thiết bị · v${set.version}`
+                      : "Bài mẫu preview · Chưa được giáo viên duyệt"}
+                  </p>
                 </div>
                 <button
                   className="primary"

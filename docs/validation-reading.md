@@ -1,5 +1,7 @@
 # Phase 2 local preview — validation
 
+Follow-up regression and browser-only Vercel demo coverage are recorded in [validation-demo.md](validation-demo.md). The results below describe the original local implementation, not a confirmed public deployment.
+
 Validated with Node 24.19.0, pnpm 11.19.0 and installed Chromium. This includes regression checks for the simplified Writing interface.
 
 | Check | Result |

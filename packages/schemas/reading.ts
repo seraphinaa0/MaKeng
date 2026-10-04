@@ -46,8 +46,8 @@ export const readingSetSchema = z
     provenance: z
       .object({
         author: z.string().min(1),
-        source: z.literal("original-synthetic"),
-        rights: z.literal("original-project-content"),
+        source: z.enum(["original-synthetic", "user-authored"]),
+        rights: z.enum(["original-project-content", "user-owned-content"]),
         humanReviewer: z.string().min(1).nullable(),
       })
       .strict(),
@@ -60,6 +60,11 @@ export const readingSetSchema = z
   .strict()
   .superRefine((set, ctx) => {
     const fail = (message: string) => ctx.addIssue({ code: "custom", message });
+    if (
+      (set.provenance.source === "user-authored") !==
+      (set.provenance.rights === "user-owned-content")
+    )
+      fail("Source and rights mismatch");
     if (set.publication === "published" && !set.provenance.humanReviewer)
       fail("Publication requires human review");
     if (new Set(set.paragraphs.map((p) => p.id)).size !== set.paragraphs.length)

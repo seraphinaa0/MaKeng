@@ -4,6 +4,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { prompts, wordCount } from "../../../packages/domain/writing";
 import type { Submission } from "../../../packages/schemas/writing";
 import Feedback from "./feedback";
+import { api } from "./api";
+import { browserDemo } from "./mode";
 
 const statusText = {
   queued: "Đang chờ chấm",
@@ -13,17 +15,6 @@ const statusText = {
   failed: "Chưa chấm được",
 };
 type HistoryPage = { items: Submission[]; nextOffset: number | null };
-async function api<T>(path: string, init?: RequestInit): Promise<T> {
-  const response = await fetch(`/api/v1/${path}`, {
-    ...init,
-    headers: { "Content-Type": "application/json", ...init?.headers },
-    cache: "no-store",
-  });
-  const body = await response.json();
-  if (!response.ok)
-    throw new Error(body.message || "Không thể kết nối. Hãy thử lại.");
-  return body as T;
-}
 function rememberSelection(id: string | null) {
   window.history.replaceState(
     null,
@@ -325,7 +316,7 @@ export default function WritingStudio() {
         </div>
       )}
       {!ready ? (
-        <p role="status">Đang tải…</p>
+        !error && <p role="status">Đang tải…</p>
       ) : tab === "history" ? (
         <>
           <div className="section-heading">
@@ -489,8 +480,9 @@ export default function WritingStudio() {
                 onChange={(event) => setConsent(event.target.checked)}
                 required
               />
-              Đồng ý lưu bài trên máy chủ local. Bạn có thể xóa bài trong lịch
-              sử.
+              Đồng ý lưu bài{" "}
+              {browserDemo ? "trong trình duyệt này" : "trên máy chủ local"}.
+              Bạn có thể xóa bài trong lịch sử.
             </label>
             <div className="submit-row">
               <button
@@ -522,7 +514,9 @@ export default function WritingStudio() {
           </h3>
           <p>
             {confirmDelete === "all"
-              ? "Bài Writing, bài Reading, phản hồi và phiên sẽ bị xóa. Không thể hoàn tác."
+              ? browserDemo
+                ? "Toàn bộ Writing, Reading, nguồn, bản nháp tạo đề và bài đã phát hành trên thiết bị này sẽ bị xóa. Hãy xuất dữ liệu tại mục Tạo đề trước; không thể hoàn tác."
+                : "Bài Writing, bài Reading, phản hồi và phiên sẽ bị xóa. Không thể hoàn tác."
               : "Bài viết và phản hồi sẽ bị xóa. Không thể hoàn tác."}
           </p>
           <div className="actions">

@@ -8,6 +8,7 @@ import type {
 import { saveAttemptSchema } from "../../../packages/schemas/reading";
 import { typeLabels } from "../../../packages/domain/reading";
 import { api, ApiError } from "./api";
+import { browserDemo } from "./mode";
 
 type Edits = Pick<AttemptInput, "answers" | "flagged">;
 export default function ReadingPlayer({
@@ -54,7 +55,7 @@ export default function ReadingPlayer({
         );
       } catch {
         setError(
-          "Trình duyệt không lưu được bản nháp. Hãy đợi xác nhận đã lưu trên máy chủ trước khi rời trang.",
+          "Không lưu được bản nháp. Giữ trang mở và sao chép câu trả lời trước khi rời trang.",
         );
       }
     },
@@ -81,9 +82,7 @@ export default function ReadingPlayer({
           }
         }
       } catch {
-        setError(
-          "Không đọc được bản nháp trên thiết bị; đang dùng bản đã lưu trên máy chủ.",
-        );
+        setError("Không đọc được bản nháp; đang dùng bản lưu gần nhất.");
       }
     }
     setReady(true);
@@ -108,7 +107,9 @@ export default function ReadingPlayer({
         savedSignature.current = JSON.stringify(snapshot);
         cache(current.current);
       }
-      setSaveState("Đã lưu trên máy chủ");
+      setSaveState(
+        browserDemo ? "Đã lưu trong trình duyệt" : "Đã lưu trên máy chủ",
+      );
       setError("");
     })();
     inflight.current = operation;
@@ -120,7 +121,9 @@ export default function ReadingPlayer({
         ["REVISION_CONFLICT", "ALREADY_SUBMITTED"].includes(err.code)
       )
         conflicted.current = true;
-      setSaveState("Chưa lưu trên máy chủ");
+      setSaveState(
+        browserDemo ? "Chưa lưu trong trình duyệt" : "Chưa lưu trên máy chủ",
+      );
       setError(
         err instanceof Error
           ? err.message
@@ -211,7 +214,7 @@ export default function ReadingPlayer({
                 setRecovered(null);
               }}
             >
-              Giữ bản trên máy chủ
+              {browserDemo ? "Giữ bản đã lưu" : "Giữ bản trên máy chủ"}
             </button>
           </div>
         </div>

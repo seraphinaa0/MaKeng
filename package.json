@@ -7,16 +7,19 @@
     "node": ">=24.0.0 <25"
   },
   "scripts": {
-    "dev": "concurrently -k -n web,worker \"pnpm --filter @makeng/web dev\" \"pnpm worker\"",
+    "dev": "pnpm --filter @makeng/web dev",
+    "dev:local": "concurrently -k -n web,worker \"pnpm --filter @makeng/web dev\" \"pnpm worker\"",
     "worker": "tsx apps/worker/index.ts",
     "build": "pnpm --filter @makeng/web build",
-    "start": "concurrently -k -n web,worker \"pnpm --filter @makeng/web start\" \"pnpm worker\"",
+    "start": "pnpm --filter @makeng/web start",
+    "start:local": "concurrently -k -n web,worker \"pnpm --filter @makeng/web start\" \"pnpm worker\"",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
     "format": "prettier --write apps packages tests *.json *.ts *.mjs pnpm-workspace.yaml .github",
     "format:check": "prettier --check apps packages tests *.json *.ts *.mjs pnpm-workspace.yaml .github",
     "test": "vitest run",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "test:e2e:demo": "playwright test --config playwright.demo.config.ts"
   },
   "dependencies": {
     "zod": "4.6.5"

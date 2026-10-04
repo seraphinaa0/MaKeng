@@ -2,6 +2,8 @@
 
 ## 1. Mục tiêu kiến trúc
 
+Kiến trúc bên dưới là đích beta. Demo hiện tại mặc định lưu trên trình duyệt, không gọi API/worker; API SQLite local là chế độ tùy chọn. Phase 3 mô phỏng workflow trên thiết bị, không cung cấp auth/shared publishing. Xem [ADR 0003](docs/decisions/0003-browser-demo-and-review.md).
+
 - Cho phép phát triển beta nhanh nhưng không khóa chặt vào một AI provider.
 - Tách rõ runtime học tập, content pipeline và AI execution.
 - Bảo vệ API key, dữ liệu cá nhân và nội dung chưa được duyệt.

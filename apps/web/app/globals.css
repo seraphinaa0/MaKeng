@@ -9,6 +9,67 @@
   --success: #166647;
   --evidence: #f0f3fc;
 }
+.demo-banner {
+  max-width: 1120px;
+  margin: 12px auto 0;
+  padding: 12px 20px;
+  font-size: 14px;
+  background: var(--evidence);
+  border-radius: 7px;
+}
+.authoring-page {
+  max-width: 1200px;
+  margin: 32px auto;
+  padding: 0 20px;
+}
+.authoring-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr);
+  gap: 24px;
+  align-items: start;
+}
+.source-preview {
+  position: sticky;
+  top: 16px;
+  max-height: 80vh;
+  overflow: auto;
+  overflow-wrap: anywhere;
+}
+.authoring-page label {
+  display: block;
+  margin: 12px 0;
+}
+.authoring-page label.consent {
+  display: flex;
+}
+.authoring-page .card {
+  margin-bottom: 20px;
+  min-width: 0;
+}
+.authoring-page legend {
+  font-weight: 600;
+}
+.authoring-page summary {
+  cursor: pointer;
+}
+.review-actions > button {
+  margin-top: 12px;
+}
+@media (max-width: 760px) {
+  .authoring-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .source-preview {
+    position: static;
+    max-height: 350px;
+  }
+  .demo-banner {
+    margin: 8px 12px 0;
+  }
+  .app-header {
+    flex-wrap: wrap;
+  }
+}
 * {
   box-sizing: border-box;
 }

@@ -76,6 +76,10 @@ Chưa đạt exit criterion về nội dung đã được người review phê d
 
 ## Phase 3 — Reading generation và reviewer
 
+Đã triển khai workflow demo trình duyệt cùng UI `/create`: nhập nguồn gốc, normalize, tạo mẫu ba dạng câu hỏi, sửa/kiểm tra cấu trúc, từ chối kèm lý do, duyệt và phát hành riêng, giới hạn tạo lại, phiên bản bất biến, nhật ký và nối thư viện Reading. Phase 2 có adapter browser để không phụ thuộc SQLite trên Vercel; API local vẫn có chế độ riêng.
+
+Đây chưa phải Phase 3 beta đầy đủ: chưa có AI generator/quality evaluator thật, durable cloud jobs, auth/reviewer roles, RLS hoặc benchmark giáo viên. Self-review trên thiết bị không thay thế kiểm duyệt chuyên môn. Xem [ADR 0003](docs/decisions/0003-browser-demo-and-review.md).
+
 ### Deliverables
 
 - Paste text/source ingestion.

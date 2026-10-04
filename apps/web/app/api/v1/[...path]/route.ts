@@ -67,6 +67,14 @@ async function handle(request: NextRequest, context: Context) {
   try {
     // Next may normalize request.url to localhost even when the browser uses 127.0.0.1.
     // Compare the browser's origin with the actual Host header; do not trust forwarded headers.
+    if (process.env.NEXT_PUBLIC_MAKENG_DEMO === "true")
+      return json(
+        {
+          code: "DEMO_ONLY",
+          message: "Bản demo chỉ lưu trong trình duyệt; API local đã tắt.",
+        },
+        503,
+      );
     const expectedOrigin = `${request.nextUrl.protocol}//${request.headers.get("host")}`;
     if (
       request.method !== "GET" &&
