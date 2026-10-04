@@ -433,6 +433,12 @@ export async function demoRequest(path: string, init?: RequestInit) {
     );
   return navigator.locks.request(DEMO_KEY, async () => {
     try {
+      if (path === "session" && init?.method === "DELETE") {
+        const { clearListening } = await import("./listening-store");
+        await clearListening();
+        const { clearSpeaking } = await import("./speaking-store");
+        await clearSpeaking();
+      }
       return await new DemoStore(localStorage).request(path, init);
     } catch (error) {
       if (error instanceof z.ZodError)

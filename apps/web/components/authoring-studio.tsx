@@ -207,7 +207,7 @@ export default function AuthoringStudio() {
           onClick={() => {
             if (
               window.confirm(
-                "Xóa toàn bộ Writing, Reading và bản nháp tạo đề trên trình duyệt này? Hãy xuất bản sao trước.",
+                "Xóa toàn bộ Writing, Reading, Listening, Speaking (audio và transcript) và bản nháp tạo đề trên trình duyệt này? Hãy xuất bản sao trước. Nếu bộ nhớ gặp lỗi có thể chỉ xóa một phần; hãy thử lại.",
               )
             )
               void run(async () => {

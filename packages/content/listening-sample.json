@@ -1,0 +1,24 @@
+{
+  "sha256": "23404db0b09b1054e178f0c921d84afccb8ad1bd4b771b3f68e8e9e08ef47014",
+  "duration": 20.41,
+  "cues": [
+    {
+      "id": "cue-1",
+      "start": 0.5,
+      "end": 7.705,
+      "text": "Welcome to the community garden tour. Our next tour takes place on Tuesday. Please arrive ten minutes before the start."
+    },
+    {
+      "id": "cue-2",
+      "start": 8.205,
+      "end": 13.98,
+      "text": "We will meet outside the library, beside the blue gate. A volunteer will take you from there to the garden."
+    },
+    {
+      "id": "cue-3",
+      "start": 14.48,
+      "end": 20.41,
+      "text": "You do not need any gardening tools. Please bring a notebook so you can write down ideas during the tour."
+    }
+  ]
+}

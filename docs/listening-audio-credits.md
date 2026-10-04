@@ -1,0 +1,7 @@
+# Original Listening fixture
+
+`apps/web/public/audio/garden-tour.wav` uses three English sentences written for MaKeng in `scripts/make-listening-sample.py`. It contains no IELTS exam recording or imported question-bank content. The transcript and questions are original project material. The sample is a preview, not an official test or a human-reviewed IELTS set.
+
+Speech was synthesized offline with FFmpeg's `flite` filter and the CMU Flite `slt` voice installed by Debian. We distribute generated audio only, not the synthesizer or voice model. Cue ranges are derived from separately rendered PCM segment boundaries; they are not an STT quality benchmark. Regenerate with `python3 scripts/make-listening-sample.py`, then format the generated JSON; changing audio requires updating its SHA-256 metadata too.
+
+CMU Flite attribution: Copyright (c) 1999–2001 Language Technologies Institute, Carnegie Mellon University. Authors include Alan W Black and David Huggins-Daines. Flite permits use and distribution without restriction subject to retention of notices, marking modifications, retaining author names, and not using author names for endorsement. Software is provided without warranties, including merchantability or fitness; Carnegie Mellon University and contributors disclaim liability for special, indirect or consequential damages arising from use. No endorsement is claimed. See the installed distribution's `/usr/share/doc/libflite1/copyright` for its full software/component notices. Private browser audio is never written to this public asset directory.

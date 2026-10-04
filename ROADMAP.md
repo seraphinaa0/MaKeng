@@ -4,6 +4,8 @@ Roadmap này mô tả thứ tự học và giảm rủi ro, không phải cam k�
 
 ## Trạng thái triển khai hiện tại
 
+**Ưu tiên hiện tại: web local, chưa public**, theo [ADR 0007](docs/decisions/0007-local-only-development.md). Sau review Phase 6, tiếp tục cải thiện UI/workflow và độ bền dữ liệu trên máy; chưa bắt đầu Expo hoặc nền tảng cloud. Các exit criteria về tài khoản, usage/retention và phát hành beta bên dưới thuộc hướng nhiều người dùng trong tương lai, không chặn phát triển web local.
+
 Đã bắt đầu Phase 1 cùng nền tảng tối thiểu từ Phase 0, theo yêu cầu xây dựng Writing trước. Bản local có editor/autosave, đề gốc, API lưu bài, worker bền vững, mock feedback bốn tiêu chí, lịch sử, export/delete và tests. Quyết định lưu trữ local được ghi tại [ADR 0001](docs/decisions/0001-local-writing-slice.md).
 
 Phase 0 chưa hoàn tất: chưa có Supabase Auth/PostgreSQL/RLS. Phase 1 hiện kiểm chứng workflow với mock; chấm AI thật và benchmark giáo viên chưa được triển khai. Chưa đủ điều kiện phát hành beta public hoặc tuyên bố band đã được hiệu chuẩn.
@@ -116,6 +118,12 @@ Chưa đạt exit criterion về nội dung đã được người review phê d
 
 ## Phase 5 — Listening
 
+Đã triển khai slice demo `/listening`: audio riêng lưu IndexedDB, audio mẫu gốc, adapter fixture/manual WebVTT có schema và timestamp checks, player/chọn đoạn/tốc độ, câu điền từ với cue dẫn chứng, tự lưu/revision/submit bất biến, lịch sử, JSON/audio export, hạn lưu 1/7/30 ngày và xóa theo bài/toàn bộ demo. UI desktop/mobile được kiểm tra trên build production trong cloud trước push/deploy. Xem [ADR 0005](docs/decisions/0005-listening-demo.md).
+
+Bổ sung khôi phục từ JSON + audio: envelope versioned và tương thích JSON cũ, kiểm tra checksum/timestamp/lịch sử, tạo bản riêng với ID mới và hạn lưu mới, không ghi đè/nhập trùng. Xóa toàn bộ được tuần tự hóa với khôi phục đang chạy; không đưa audio đã xóa trở lại sau khi thao tác xóa kết thúc. Không có đồng bộ cloud hoặc restore Writing/Reading.
+
+Chưa hoàn tất Phase 5 production: không có STT thật, private cloud upload/signed URL, auth/RLS, transcript quality benchmark hoặc kiểm duyệt giáo viên. Audio riêng không gửi provider; fixture không nhận dạng arbitrary audio. Cleanup chạy khi truy cập Listening, không chạy khi trình duyệt đóng. Bài nghe ngắn không phải đề IELTS hoàn chỉnh; điểm Listening chưa tham gia dashboard Reading. Bản này giữ local theo yêu cầu review trước triển khai.
+
 ### Deliverables
 
 - Private audio upload.
@@ -132,6 +140,25 @@ Chưa đạt exit criterion về nội dung đã được người review phê d
 
 ## Phase 6 — Speaking experiment
 
+### Trạng thái implementation
+
+Slice browser demo `/speaking`: đề gốc versioned với Part 1/2/3, timer chuẩn bị
+Part 2, microphone theo consent/action, record/stop/playback, transcript nhập tay,
+checklist tự review và mục tiêu lần sau. Lưu explicit vào IndexedDB riêng,
+history/resume, revision giữa tab, hoàn tất khóa text/checklist, xóa audio/phiên,
+retention 1/7/30 ngày và export metadata/audio riêng. Xóa toàn bộ demo có cả
+Speaking; không gửi audio/transcript tới backend hay AI.
+
+Đây là experiment bổ sung theo yêu cầu, chưa phải complete IELTS examiner hoặc
+exit của production Phase 6. STT thật, feedback AI, xác thực/cloud privacy và
+human-reviewed benchmark chưa triển khai. Không gọi checklist là feedback từ
+giáo viên. Xem [ADR 0006](docs/decisions/0006-speaking-demo.md) và
+[evaluation protocol](docs/speaking-evaluation.md).
+
+Kiểm tra local cloud sau review: lint/format/typecheck/build pass, 72 unit/integration tests
+và 66 demo E2E desktop/mobile pass (22 ca Speaking, bao gồm các ca sửa lỗi). Đã review screenshot hai
+kích thước; chưa push/deploy. Xem [validation](docs/validation-speaking.md).
+
 ### Deliverables
 
 - Recording, playback và transcript.
@@ -146,6 +173,17 @@ Chưa đạt exit criterion về nội dung đã được người review phê d
 - Privacy, consent và audio deletion đã được kiểm thử.
 
 ## Phase 7 — Mobile readiness
+
+### Trạng thái sau review Phase 6
+
+Chưa bắt đầu Expo. Review đã sửa thời lượng ghi âm khi encoder đóng chậm,
+retention 30 ngày mở tab liên tục (cả Listening/Speaking), đóng capture khi hết
+hạn dù storage lỗi và giữ player/bản nháp khi phiên khác thay đổi.
+Theo lựa chọn web local, hoãn Phase 7 mobile; không cần cloud auth hoặc usage
+công khai để tiếp tục cải thiện app trên máy. Hướng tiếp theo trong
+[readiness assessment](docs/phase7-readiness.md): hoàn thiện workflow, backup/restore
+và xem xét backend local cho toàn bộ tính năng. Các deliverables/điều kiện mobile
+bên dưới chỉ áp dụng khi quay lại nhu cầu native app.
 
 ### Deliverables
 
@@ -174,10 +212,10 @@ Chưa đạt exit criterion về nội dung đã được người review phê d
 
 ## Thứ tự triển khai ngay
 
-1. Foundation và mock provider.
-2. Writing Task 2 end-to-end.
-3. Reading runtime với nội dung thủ công.
-4. Reading generation và reviewer.
-5. Progress và mistake loop.
+1. Giữ workflow chạy local đơn giản, build/review trước mọi triển khai.
+2. Hoàn thiện luyện tập, trạng thái lưu/lỗi và khả năng tiếp tục bài giữa các phiên.
+3. Ưu tiên backup/restore dữ liệu, nhất là Speaking chưa có restore.
+4. Khi cần lưu bền trên máy, thiết kế backend local cho cả bốn kỹ năng trước khi chuyển khỏi browser storage.
+5. Xem xét AI thật và benchmark riêng khi có nhu cầu; hoãn cloud/public beta/Expo.
 
-Không triển khai đồng thời Listening, Speaking và mobile trong beta đầu tiên.
+Các bước này là kế hoạch tiếp theo, chưa phải các tính năng đã triển khai.

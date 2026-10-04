@@ -31,6 +31,8 @@ Giá trị khác biệt không phải là “gọi AI để sinh đề”, mà l
 
 ## 4. Phạm vi beta
 
+**Giai đoạn hiện tại: phát triển web local cho sử dụng cá nhân, chưa public.** Bản trình duyệt đã có Writing/Reading, Tạo đề, Tiến độ và Listening/Speaking với giới hạn mock/manual được mô tả trong README. Không yêu cầu đăng nhập, Supabase, usage công khai hay native app để tiếp tục công việc này. Các tiêu chí beta nhiều người dùng bên dưới là mục tiêu tương lai; xem [ADR 0007](docs/decisions/0007-local-only-development.md).
+
 Beta gồm hai vertical slice:
 
 ### Writing Task 2

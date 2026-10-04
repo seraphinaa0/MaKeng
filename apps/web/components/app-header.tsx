@@ -24,6 +24,18 @@ export default function AppHeader() {
             Reading
           </Link>
           <Link
+            href="/listening"
+            aria-current={path === "/listening" ? "page" : undefined}
+          >
+            Listening
+          </Link>
+          <Link
+            href="/speaking"
+            aria-current={path === "/speaking" ? "page" : undefined}
+          >
+            Speaking
+          </Link>
+          <Link
             href="/create"
             aria-current={path === "/create" ? "page" : undefined}
           >
@@ -40,9 +52,9 @@ export default function AppHeader() {
       </header>
       {browserDemo && (
         <p className="demo-banner">
-          Demo trên thiết bị · Không gửi bài viết/nguồn tới AI hoặc máy chủ. Dữ
-          liệu chỉ lưu trong trình duyệt, không đồng bộ và có thể mất khi xóa dữ
-          liệu trang web. Điểm Writing là minh họa.
+          Demo trên thiết bị · Không gửi bài viết, nguồn, audio hoặc transcript
+          tới AI hoặc máy chủ. Dữ liệu chỉ lưu trong trình duyệt, không đồng bộ
+          và có thể mất khi xóa dữ liệu trang web. Điểm Writing là minh họa.
         </p>
       )}
     </>

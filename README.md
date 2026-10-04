@@ -1,8 +1,68 @@
 # MaKeng
 
-Không gian luyện IELTS độc lập. Mặc định là demo Writing, Reading và Tạo đề lưu trong trình duyệt, không cần API AI hoặc database. Chế độ API SQLite + worker cũ vẫn dùng được khi đặt `NEXT_PUBLIC_MAKENG_DEMO=false` trước khi chạy/build.
+Không gian luyện IELTS độc lập. Mặc định là demo Writing, Reading, Listening, Speaking và Tạo đề lưu trong trình duyệt, không cần API AI hoặc database. Chế độ API SQLite + worker cũ vẫn dùng được khi đặt `NEXT_PUBLIC_MAKENG_DEMO=false` trước khi chạy/build.
 
-Giao diện gồm **Writing**, **Reading**, **Tạo đề** và **Tiến độ**. Writing có một cột. Reading tại `/reading` có 5 bài mẫu gốc, mỗi bài 5 câu: trắc nghiệm, True/False/Not Given và điền từ. Bài mẫu có tình huống hư cấu, chưa được giáo viên duyệt hoặc hiệu chuẩn độ khó IELTS.
+**Hướng hiện tại: web chạy local, chưa public.** Không cần Vercel, Supabase hoặc Expo để tiếp tục phát triển. Chạy trên máy của bạn theo mục [Chạy local](#chạy-local); `dev` và `start` chỉ lắng nghe ở `127.0.0.1`. Không tự push hoặc deploy trong giai đoạn này. Quyết định tại [ADR 0007](docs/decisions/0007-local-only-development.md).
+
+Giao diện gồm **Writing**, **Reading**, **Listening**, **Speaking**, **Tạo đề** và **Tiến độ**. Writing có một cột. Reading tại `/reading` có 5 bài mẫu gốc, mỗi bài 5 câu: trắc nghiệm, True/False/Not Given và điền từ. Bài mẫu có tình huống hư cấu, chưa được giáo viên duyệt hoặc hiệu chuẩn độ khó IELTS.
+
+## Phase 6 — Speaking trên thiết bị
+
+Mở **Speaking** (`/speaking`), chọn hạn lưu và xác nhận consent để tạo lượt luyện.
+Đề gốc Everyday learning gồm 2 câu Part 1, cue card Part 2 và 2 câu Part 3;
+đây là buổi luyện rút gọn, chưa phải mô phỏng bài thi đầy đủ. Part 2 có timer
+chuẩn bị 60 giây và giới hạn ghi âm 120 giây; các câu khác giới hạn 180 giây.
+Không tự bật microphone. Bấm **Ghi âm**, **Dừng ghi âm**, nghe lại, nhập transcript
+và bấm **Lưu câu trả lời**. Không có STT hoặc API AI, không yêu cầu key.
+
+Audio mới ở RAM cho đến khi lưu; transcript/checklist không tự lưu. Chuyển câu
+hoặc trang cần xác nhận bỏ bản nháp. Rời tab sẽ dừng ghi âm; rời phiên sẽ bỏ
+bản chưa lưu và dừng cả microphone nhận quyền muộn. Tự review có bốn hướng:
+mạch nói, từ vựng, ngữ pháp và độ dễ hiểu, cùng ghi chú dẫn chứng/mục tiêu;
+checklist chỉ xác nhận người học đã tự kiểm tra. Không chấm accent, không tính
+band hoặc suy ra phát âm/WPM từ transcript nhập tay.
+
+**Hoàn tất phiên** xác nhận số câu còn trống rồi khóa transcript/checklist.
+Có tiếp tục phiên đang luyện, xem phiên hoàn tất, xóa audio từng câu (kể cả đã
+hoàn tất), hoặc xóa phiên kèm toàn bộ nội dung. Speaking dùng IndexedDB riêng,
+atomic theo phiên, revision kiểm tra giữa tab; lưu không tạo lại phiên đã xóa.
+Hạn lưu 1/7/30 ngày, mặc định 7; tự dọn khi truy cập/lấy nét tab hoặc hết hạn
+lúc phiên đang mở. Giới hạn 20 phiên, 100 MiB audio, 20 MiB mỗi câu. Không có
+xóa nền khi trình duyệt đã đóng. Thời lượng thu là ước tính wall time, không
+phải độ dài speech được xác minh qua giải mã.
+
+**Xuất JSON đã lưu** giữ metadata/transcript/checklist; **Tải audio** tải từng
+bản ghi riêng. JSON chưa có import/restore; Writing/Tạo đề export không chứa
+Speaking. File đã tải nằm ngoài quyền xóa của app. Xóa toàn bộ demo ở Writing
+hoặc Tạo đề xóa cả Listening và Speaking trước localStorage; ba store không
+có transaction chung, lỗi ở bước sau có thể khiến xóa một phần, hãy thử lại.
+Không có cloud sync, mã hóa riêng, tài khoản hay gộp vào Tiến độ Reading.
+
+Speaking chỉ chạy trong browser demo; API SQLite cũ chưa có Speaking. Human
+benchmark và phản hồi AI vẫn là tiêu chí production còn mở: xem
+[ADR 0006](docs/decisions/0006-speaking-demo.md) và
+[quy trình đánh giá](docs/speaking-evaluation.md). Tiếp tục build/review web
+local; public deployment được hoãn theo lựa chọn hiện tại của người dùng.
+Kết quả kiểm thử và giới hạn review tại [validation Speaking](docs/validation-speaking.md).
+
+Review tiếp theo sửa thời lượng dừng ghi âm, timer retention 30 ngày cho cả
+Listening/Speaking và việc reset player khi phiên khác thay đổi. Hết hạn đóng
+recorder/player ngay; nếu storage lỗi, báo lỗi để retry dọn dữ liệu. Đánh giá
+điều kiện chuyển mobile tại [Phase 7 readiness](docs/phase7-readiness.md).
+
+## Phase 5 — Listening trên thiết bị
+
+Mở **Listening** (`/listening`) trong chế độ demo. Bấm **Dùng bài nghe mẫu** để thử audio gốc tổng hợp khoảng 20 giây, ba câu điền từ. Trình phát có tốc độ nghe và chọn đoạn; câu trả lời tự lưu, có tiếp tục bài và lịch sử. Khi nộp bài, câu trả lời được giữ nguyên, mở transcript theo thời gian và nút nghe đoạn dẫn chứng cho từng đáp án. Chỉ tính số câu đúng; không quy đổi band.
+
+**Nhập audio của bạn** nhận WAV/MP3/Ogg/WebM/MP4 audio có MIME tương ứng, trình duyệt giải mã được, tối đa 20 MiB/30 phút. Dán WebVTT văn bản thuần, kiểm tra timestamp (tăng, không chồng lấn, không vượt audio), nghe kiểm tra, rồi tự soạn câu điền từ với chỗ trống `___`, đáp án nguyên văn và cue dẫn chứng. Cần xác nhận quyền sử dụng và người kiểm duyệt trước khi lưu. Không có tự nhận dạng giọng nói: adapter hiện có là transcript thủ công và fixture chỉ cho đúng SHA-256 audio mẫu. Không có API key AI được dùng.
+
+Audio riêng được giữ dưới dạng Blob trong IndexedDB, cùng transcript và attempts, không upload lên server, không thêm vào public assets. Khác với localStorage Writing/Reading, giới hạn thư viện là 10 bài/100 MiB audio. Mặc định lưu 7 ngày, tùy chọn 1/7/30 ngày; đổi hạn tính lại từ thời điểm đổi. Bài hết hạn bị dọn khi vào/quay lại Listening; trình duyệt đóng không có tác vụ xóa nền. Xóa từng bài xóa cả audio/transcript/attempts trong một transaction; xóa toàn bộ demo ở Writing/Tạo đề cũng xóa Listening. Nếu IndexedDB bị chặn, xóa toàn bộ báo lỗi và giữ dữ liệu localStorage; hai loại bộ nhớ không thể có một transaction chung. Tải lại các tab của bản cũ trước khi xóa dữ liệu toàn bộ.
+
+Mỗi bài có **Xuất bài & lịch sử JSON** và **Tải audio** riêng. Mở **Khôi phục bản sao lưu Listening**, chọn hai file và kiểm tra tiêu đề/lượt luyện trước khi xác nhận quyền sử dụng cùng hạn lưu mới. JSON mới có envelope version 1; JSON cũ từ Listening vẫn dùng được. Giới hạn JSON 10 MiB và audio 20 MiB; file audio phải khớp SHA-256, kích thước và timestamp, tên file có thể khác. Khôi phục tạo bản riêng với ID mới, giữ nội dung, điểm và câu trả lời dang dở; không gộp/ghi đè bài cũ. Bản trùng bị chặn, kể cả khi hai tab khôi phục đồng thời. Bản sao lưu hết hạn có thể khôi phục sau khi chọn hạn lưu mới. Xóa toàn bộ trong lúc khôi phục sẽ chờ kiểm tra/lưu xong rồi xóa cả bản vừa khôi phục.
+
+JSON export ở Tạo đề không chứa Listening/audio và vẫn chưa có restore Writing/Reading. Bản tải về do người dùng quản lý, không bị xóa từ app. Không có đồng bộ thiết bị, mã hóa riêng, tài khoản hoặc dịch vụ STT thật. Nội dung/người kiểm duyệt trong JSON là thông tin tự khai, không phải xác nhận giáo viên; file nhập phải có nguồn và dẫn chứng hợp lệ. Transcript/timestamp chưa đạt benchmark có người kiểm tra; bài riêng tự kiểm duyệt không thay thế giáo viên. Listening chưa gộp vào Tiến độ Reading. Xem [ADR 0005](docs/decisions/0005-listening-demo.md), [nguồn audio](docs/listening-audio-credits.md) và [kiểm thử](docs/validation-listening.md).
+
+Work Phase 5 được build và review trong cloud bằng Chromium desktop/mobile trước triển khai. Không thể truy cập máy Windows của người dùng từ workspace này. Giữ branch local, không push/deploy cho đến khi người dùng duyệt.
 
 ## Phase 4 — Tiến độ và ôn lỗi
 
@@ -19,14 +79,13 @@ Mở **Tiến độ** (`/progress`) hoặc liên kết ở cuối phần kết q
 
 Lưu trữ demo được nâng từ schema v1 lên v2, giữ nguyên khóa và bài cũ. Đọc không ghi đè dữ liệu; mutation thành công mới lưu phiên bản mới. Nếu đang mở tab từ bản deploy cũ, tải lại tab trước khi tiếp tục. Xóa dữ liệu phiên cũng xóa tiến độ, trạng thái ôn và thiết lập gợi ý; JSON export gồm các trường này. Không di chuyển SQLite hoặc đồng bộ thiết bị. Xem [ADR 0004](docs/decisions/0004-learning-loop.md).
 
-## Demo Vercel và Phase 3
+## Demo trình duyệt và Phase 3
 
 - Web mặc định không gọi `/api/v1`; API trả `503 DEMO_ONLY` trước khi mở database. Không chạy worker trên Vercel.
 - Dữ liệu trong localStorage riêng theo browser/origin. Đổi domain, trình duyệt hoặc xóa dữ liệu website sẽ không thấy lịch sử cũ. Không tự di chuyển dữ liệu SQLite sang demo. Không gửi essay/source tới AI hay API.
 - Cần HTTPS (hoặc localhost) và trình duyệt hiện đại hỗ trợ Web Locks. Ghi dữ liệu được khóa giữa các tab, kiểm tra revision, và báo lỗi khi storage bị chặn/đầy. Dữ liệu hỏng không bị ghi đè tự động.
 - Answer key nằm trong browser bundle/storage: chỉ phù hợp luyện thử, không dùng làm hệ thống thi bảo mật. Không có tài khoản, phân quyền reviewer hay đồng bộ cloud.
-- Trong Vercel chọn framework Next.js, root `apps/web`, dùng lockfile/workspace ở repo root. Giữ mặc định demo hoặc đặt `NEXT_PUBLIC_MAKENG_DEMO=true` và **rebuild**. Node.js 24.x; không nhập AI key.
-- Không đưa `.data`, `.env` hay dữ liệu local lên deployment. Chưa xác nhận deployment public sau thay đổi này.
+- Vercel không thuộc workflow hiện tại. `apps/web/vercel.json` tắt deployment tự động từ Git cho project có root `apps/web`; deployment thủ công vẫn có thể được tạo. Quyết định chạy local không tự xóa hoặc tắt các deployment đã tạo trước đây.
 
 Tại `/create`:
 
@@ -66,14 +125,16 @@ pnpm install --frozen-lockfile
 pnpm dev
 ```
 
-Lệnh `dev` chạy Next.js demo trên loopback port 3000, không chạy worker. Dừng bằng Ctrl+C.
+Lệnh `dev` chạy Next.js demo trên loopback port 3000, không chạy worker. Trên chính máy chạy lệnh, mở `http://127.0.0.1:3000`. Dừng bằng Ctrl+C. Dùng cùng trình duyệt, hostname và port để truy cập lại dữ liệu; `localhost:3000` và `127.0.0.1:3000` có bộ nhớ riêng.
+
+Đây là chế độ có đầy đủ các màn hình hiện tại. Nếu đã bật `NEXT_PUBLIC_MAKENG_DEMO=false`, bỏ cấu hình đó trước khi chạy/build lại (PowerShell: `Remove-Item Env:NEXT_PUBLIC_MAKENG_DEMO -ErrorAction SilentlyContinue`; bash: `unset NEXT_PUBLIC_MAKENG_DEMO`). Chạy local không đồng nghĩa khởi động hoàn toàn offline; chưa có offline app cache. Dữ liệu trình duyệt không phải bản backup: export trước khi xóa dữ liệu website, đổi origin hoặc đổi trình duyệt.
 
 ```sh
 pnpm build
 pnpm start
 ```
 
-`start` chạy web demo từ build trước đó. Để dùng API SQLite + worker cũ (không triển khai lên Vercel):
+`start` chạy web demo từ build trước đó. Chế độ API SQLite + worker cũ chỉ hỗ trợ Writing/Reading; Listening, Speaking, Tạo đề và Tiến độ hiện dùng chế độ demo trình duyệt. Để thử API cũ:
 
 ```sh
 export NEXT_PUBLIC_MAKENG_DEMO=false
@@ -89,7 +150,7 @@ Database mặc định nằm ở `.data/makeng.sqlite` tại root repo, ngoài G
 
 ```sh
 export MAKENG_DB_PATH=/absolute/path/to/makeng.sqlite
-pnpm dev
+pnpm dev:local
 ```
 
 `.env.example` chỉ mô tả biến tùy chọn; worker không tự đọc file `.env`.
@@ -165,4 +226,4 @@ Mutation cần cùng origin với web; POST submission cần header `Idempotency
 - [ADR: local Writing slice](docs/decisions/0001-local-writing-slice.md)
 - [Phase 4 validation](docs/validation-learning.md)
 
-Thứ tự tiếp theo: Supabase Auth/PostgreSQL và RLS → adapter AI thật + disclosure riêng → benchmark có người chấm → beta nhiều người dùng.
+Ưu tiên tiếp theo: hoàn thiện trải nghiệm web local, khả năng sao lưu/khôi phục và lưu trữ trên máy. Adapter AI thật là bước riêng khi cần; tài khoản cloud, beta public và native mobile được hoãn. Xem [hướng phát triển sau Phase 6](docs/phase7-readiness.md).

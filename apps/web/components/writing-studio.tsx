@@ -515,7 +515,7 @@ export default function WritingStudio() {
           <p>
             {confirmDelete === "all"
               ? browserDemo
-                ? "Toàn bộ Writing, Reading, nguồn, bản nháp tạo đề và bài đã phát hành trên thiết bị này sẽ bị xóa. Hãy xuất dữ liệu tại mục Tạo đề trước; không thể hoàn tác."
+                ? "Toàn bộ Writing, Reading, Listening và Speaking (audio, transcript và lượt luyện), nguồn, bản nháp tạo đề và bài đã phát hành trên thiết bị này sẽ bị xóa. Hãy xuất dữ liệu tại mục Tạo đề và xuất Listening/Speaking riêng trước; không thể hoàn tác. Nếu bộ nhớ gặp lỗi, thao tác có thể chỉ xóa một phần; hãy thử lại."
                 : "Bài Writing, bài Reading, phản hồi và phiên sẽ bị xóa. Không thể hoàn tác."
               : "Bài viết và phản hồi sẽ bị xóa. Không thể hoàn tác."}
           </p>

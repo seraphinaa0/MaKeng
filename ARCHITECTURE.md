@@ -4,6 +4,8 @@
 
 Kiến trúc bên dưới là đích beta. Demo hiện tại mặc định lưu trên trình duyệt, không gọi API/worker; API SQLite local là chế độ tùy chọn. Phase 3 mô phỏng workflow trên thiết bị, không cung cấp auth/shared publishing. Xem [ADR 0003](docs/decisions/0003-browser-demo-and-review.md).
 
+Theo [ADR 0007](docs/decisions/0007-local-only-development.md), hướng phát triển hiện tại là web local, chưa public. Các lệnh web mặc định bind `127.0.0.1`; localStorage/IndexedDB là storage cho đầy đủ tính năng hiện tại, SQLite/worker chỉ phục vụ Writing/Reading cũ. Stack cloud và deployment bên dưới được hoãn, không phải điều kiện để tiếp tục phát triển local. Chưa có backend local thống nhất cho cả bốn kỹ năng hoặc đồng bộ thiết bị.
+
 - Cho phép phát triển beta nhanh nhưng không khóa chặt vào một AI provider.
 - Tách rõ runtime học tập, content pipeline và AI execution.
 - Bảo vệ API key, dữ liệu cá nhân và nội dung chưa được duyệt.
@@ -204,5 +206,14 @@ POST /api/v1/attempts/:id/submit
 ## 12. Quy tắc thay đổi kiến trúc
 
 Phase 4 demo dùng domain analytics thuần tính từ snapshot bài đã nộp; chỉ preferences và trạng thái ôn được persist thêm trong browser state v2. Xem [ADR 0004](docs/decisions/0004-learning-loop.md). Không có dịch vụ analytics hoặc AI call mới.
+
+Phase 5/6 demo có hai IndexedDB riêng cho Listening và Speaking, mỗi record
+gồm metadata đã validate và Blob riêng tư trong cùng transaction. Speaking dùng
+readwrite transaction để tuần tự hóa CAS/delete giữa tab; microphone chỉ mở
+sau action/consent, transcript manual và self-review không gọi provider. Xóa
+toàn bộ đi qua hai audio store rồi localStorage, không atomic giữa store. Chi
+tiết phạm vi và version tại [ADR 0005](docs/decisions/0005-listening-demo.md) và
+[ADR 0006](docs/decisions/0006-speaking-demo.md). Cloud buckets/RLS/worker trong
+kiến trúc production ở trên chưa được thay thế hoặc triển khai bởi demo này.
 
 Mọi thay đổi ảnh hưởng schema, security boundary, provider contract hoặc content lifecycle phải được ghi bằng Architecture Decision Record trong `docs/decisions/` trước khi implement.
