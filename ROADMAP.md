@@ -98,6 +98,8 @@ Chưa đạt exit criterion về nội dung đã được người review phê d
 
 ## Phase 4 — Learning loop
 
+Đã triển khai trong demo trình duyệt: dashboard `/progress`, lọc thời gian, Reading theo dạng và so sánh hai nhóm 3 lượt khi đủ dữ liệu, taxonomy lỗi quan sát được, gợi ý có lý do/tắt/bỏ qua/khôi phục và hàng đợi thử lại câu sai. Ôn không sửa điểm gốc. Migration browser v1→v2 giữ nguyên dữ liệu. Writing chỉ đếm bài/từ vì chưa có feedback thật; xu hướng criterion/band Writing và thống kê cloud chưa triển khai. Xem [ADR 0004](docs/decisions/0004-learning-loop.md).
+
 ### Deliverables
 
 - Progress dashboard.

@@ -13,7 +13,7 @@ export default function AppHeader() {
         <Link className="brand" href="/">
           MaKeng
         </Link>
-        <nav aria-label="Kỹ năng">
+        <nav aria-label="Điều hướng chính">
           <Link href="/" aria-current={path === "/" ? "page" : undefined}>
             Writing
           </Link>
@@ -28,6 +28,12 @@ export default function AppHeader() {
             aria-current={path === "/create" ? "page" : undefined}
           >
             Tạo đề
+          </Link>
+          <Link
+            href="/progress"
+            aria-current={path === "/progress" ? "page" : undefined}
+          >
+            Tiến độ
           </Link>
         </nav>
         <span className="preview-label">Bản thử nghiệm</span>

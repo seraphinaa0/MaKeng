@@ -12,7 +12,7 @@ Ba thuộc tính chính:
 
 ## 2. Nguyên tắc UI
 
-Theo phản hồi sử dụng đầu tiên, giao diện ưu tiên tối giản: thanh điều hướng ngang có Writing, Reading và Tạo đề; bỏ sidebar, slogan và các khối trang trí. Writing dùng một cột theo thứ tự chọn đề → viết → nộp. Reading có thư viện bài ngắn; trên điện thoại chuyển giữa Bài đọc và Câu hỏi bằng hai nút rõ ràng. Lịch sử đặt cạnh thao tác luyện tập, trạng thái lưu được hiển thị ngay gần câu trả lời.
+Theo phản hồi sử dụng đầu tiên, giao diện ưu tiên tối giản: thanh điều hướng ngang có Writing, Reading, Tạo đề và Tiến độ; bỏ sidebar, slogan và các khối trang trí. Writing dùng một cột theo thứ tự chọn đề → viết → nộp. Reading có thư viện bài ngắn; trên điện thoại chuyển giữa Bài đọc và Câu hỏi bằng hai nút rõ ràng. Lịch sử đặt cạnh thao tác luyện tập, trạng thái lưu được hiển thị ngay gần câu trả lời.
 
 - Một màn hình có một primary action rõ ràng.
 - Reading và Writing ưu tiên độ dễ đọc hơn mật độ tính năng.
@@ -121,6 +121,8 @@ Phase 3 bổ sung mục điều hướng **Tạo đề** (`/create`), form nhậ
 - Hỗ trợ keyboard navigation cho câu hỏi.
 
 ## 9. Accessibility baseline
+
+Phase 4 thêm **Tiến độ** với thẻ số liệu, meter có nhãn và số đúng/tổng câu, bộ lọc thời gian, gợi ý giải thích bằng văn bản và form ôn từng câu sai. Trạng thái Chưa ôn/Đã ôn phân biệt bằng chữ; không dùng màu hoặc band mock làm bằng chứng tiến bộ. Giữ một cột trên mobile, không thêm sidebar. Toggle gợi ý phản hồi ngay và hoàn nguyên nếu lưu thất bại.
 
 - Đạt WCAG 2.2 AA cho beta.
 - Focus ring luôn nhìn thấy.

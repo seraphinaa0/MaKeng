@@ -6,6 +6,13 @@ import { newDraft, reviewDraft } from "../domain/authoring";
 import { ApiError } from "../domain/errors";
 import { publicReadingSet, scoreReading } from "../domain/reading";
 import { draftSchema } from "../schemas/authoring";
+import { buildProgress, type ReviewFeedback } from "../domain/learning";
+import {
+  learningStateSchema,
+  newLearningState,
+  learningActionSchema,
+  periodSchema,
+} from "../schemas/learning";
 import {
   readingSetSchema,
   saveAttemptSchema,
@@ -37,7 +44,7 @@ const storedSubmission = z.object({
   overall: z.number(),
   key: z.uuid(),
 });
-const stateSchema = z
+const legacyStateSchema = z
   .object({
     version: z.literal(1),
     sessionId: z.uuid(),
@@ -47,16 +54,21 @@ const stateSchema = z
     published: z.array(readingSetSchema),
   })
   .strict();
+const stateSchema = legacyStateSchema.extend({
+  version: z.literal(2),
+  learning: learningStateSchema,
+});
 type State = z.infer<typeof stateSchema>;
 type StoredAttempt = z.infer<typeof storedAttempt>;
 function fresh(): State {
   return {
-    version: 1,
+    version: 2,
     sessionId: crypto.randomUUID(),
     writing: [],
     attempts: [],
     drafts: [],
     published: [],
+    learning: newLearningState(),
   };
 }
 function visibleAttempt(item: StoredAttempt): ReadingAttempt {
@@ -111,7 +123,11 @@ export class DemoStore {
     }
     if (!raw) return fresh();
     try {
-      return stateSchema.parse(JSON.parse(raw));
+      const parsed: unknown = JSON.parse(raw);
+      const legacy = legacyStateSchema.safeParse(parsed);
+      if (legacy.success)
+        return { ...legacy.data, version: 2, learning: newLearningState() };
+      return stateSchema.parse(parsed);
     } catch {
       throw new ApiError(
         "Dữ liệu demo không đọc được. Không ghi đè dữ liệu; hãy sao lưu trước khi xóa dữ liệu trang web.",
@@ -172,6 +188,78 @@ export class DemoStore {
     if (route === "session" && method === "GET")
       return save({ mode: "mock", sessionId: state.sessionId, prompts });
     if (route === "demo/export" && method === "GET") return state;
+    if (route === "learning/progress" && method === "GET")
+      return buildProgress(
+        state.attempts,
+        state.writing,
+        catalog(state),
+        state.learning,
+        periodSchema.parse(url.searchParams.get("period") ?? "all"),
+        Date.now(),
+      );
+    if (route === "learning/actions" && method === "POST") {
+      const input = learningActionSchema.parse(body());
+      const learning = state.learning;
+      if (input.revision !== learning.revision) conflict();
+      let feedback: ReviewFeedback | null = null;
+      if (input.action === "preferences")
+        learning.recommendationsEnabled = input.enabled;
+      if (input.action === "restore") learning.dismissed = [];
+      if (input.action === "dismiss") {
+        const progress = buildProgress(
+          state.attempts,
+          state.writing,
+          catalog(state),
+          learning,
+          periodSchema.parse(url.searchParams.get("period") ?? "all"),
+          Date.now(),
+        );
+        required(progress.recommendations.find((r) => r.id === input.id));
+        learning.dismissed = [...learning.dismissed, input.id].slice(-500);
+      }
+      if (input.action === "answer" || input.action === "reopen") {
+        const progress = buildProgress(
+          state.attempts,
+          state.writing,
+          catalog(state),
+          learning,
+          "all",
+          Date.now(),
+        );
+        const mistake = required(
+          progress.mistakes.find((m) => m.key === input.key),
+        );
+        const previous = learning.reviews[input.key];
+        if (input.action === "answer") {
+          const attempt = required(
+            state.attempts.find((a) => a.id === mistake.attemptId),
+          );
+          const result = required(
+            scoreReading(attempt.content, {
+              [mistake.question.id]: input.answer,
+            }).questions.find((q) => q.questionId === mistake.question.id),
+          );
+          learning.reviews[input.key] = {
+            reviewed: result.correct,
+            tries: (previous?.tries ?? 0) + 1,
+            updatedAt: new Date().toISOString(),
+          };
+          feedback = {
+            correct: result.correct,
+            answer: input.answer,
+            solution: result.solution,
+            reviewed: result.correct,
+          };
+        } else
+          learning.reviews[input.key] = {
+            reviewed: false,
+            tries: previous?.tries ?? 0,
+            updatedAt: new Date().toISOString(),
+          };
+      }
+      learning.revision++;
+      return save({ feedback });
+    }
     if (route === "authoring/drafts" && method === "GET") return state.drafts;
     if (route === "authoring/drafts" && method === "POST") {
       if (state.drafts.length >= 50)

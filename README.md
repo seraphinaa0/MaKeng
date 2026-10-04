@@ -2,7 +2,22 @@
 
 Không gian luyện IELTS độc lập. Mặc định là demo Writing, Reading và Tạo đề lưu trong trình duyệt, không cần API AI hoặc database. Chế độ API SQLite + worker cũ vẫn dùng được khi đặt `NEXT_PUBLIC_MAKENG_DEMO=false` trước khi chạy/build.
 
-Giao diện gồm **Writing**, **Reading** và **Tạo đề**. Writing có một cột. Reading tại `/reading` có 5 bài mẫu gốc, mỗi bài 5 câu: trắc nghiệm, True/False/Not Given và điền từ. Bài mẫu có tình huống hư cấu, chưa được giáo viên duyệt hoặc hiệu chuẩn độ khó IELTS.
+Giao diện gồm **Writing**, **Reading**, **Tạo đề** và **Tiến độ**. Writing có một cột. Reading tại `/reading` có 5 bài mẫu gốc, mỗi bài 5 câu: trắc nghiệm, True/False/Not Given và điền từ. Bài mẫu có tình huống hư cấu, chưa được giáo viên duyệt hoặc hiệu chuẩn độ khó IELTS.
+
+## Phase 4 — Tiến độ và ôn lỗi
+
+Mở **Tiến độ** (`/progress`) hoặc liên kết ở cuối phần kết quả Reading. Chỉ có trong demo trình duyệt, không đọc database SQLite cũ.
+
+- Lọc toàn bộ/7 ngày/30 ngày gần nhất, tính theo thời điểm nộp bài Reading. Đây là khoảng liên tục tính lùi từ lúc mở/cập nhật trang, không phải tuần/tháng lịch. Thống kê dùng toàn bộ lịch sử đã lưu, không chỉ trang đầu 20 bài.
+- Hiển thị số bài, tổng câu đúng/tổng câu, số lỗi chưa ôn và tỷ lệ đúng theo ba dạng. Bài chưa nộp không tham gia chấm điểm. Mỗi lượt làm lại đều được tính, nên tỷ lệ đúng không thể coi là phép đo năng lực đã hiệu chuẩn.
+- Khi đủ 6 bài có cùng dạng câu hỏi trong khoảng đã chọn, so sánh số đúng/tổng câu của 3 lượt gần nhất với 3 lượt trước. Hiển thị chênh lệch điểm phần trăm, không quy đổi sang band IELTS.
+- Writing chỉ thống kê số bài và số từ. Không vẽ xu hướng band/tiêu chí từ điểm mock 6.0.
+- Phân loại lỗi quan sát được: bỏ trống, vượt giới hạn từ, lựa chọn/TFNG/từ điền không khớp. Không tự kết luận nguyên nhân ngữ pháp hay từ vựng.
+- Gợi ý có lý do: tiếp tục bài chưa nộp, ôn lỗi, hoặc luyện bài có dạng cần xem lại. Ưu tiên phiên bản ít luyện; phân biệt bài mẫu preview. Có tắt/bật, bỏ qua và khôi phục gợi ý; lựa chọn lưu qua reload.
+- Mục **Ôn câu sai** cho lọc dạng, đọc lại nguồn và thử trả lời. Đúng thì chuyển sang **Đã ôn**; có thể đưa lại vào hàng đợi. Mỗi câu gắn với attempt/version gốc; ôn lại không đổi điểm bài đã nộp. Hai lần làm cùng câu là hai mục riêng.
+- Progress tự cập nhật khi quay lại cửa sổ hoặc dữ liệu thay đổi ở tab khác; có nút Cập nhật. Thao tác đồng thời kiểm tra revision trước khi lưu.
+
+Lưu trữ demo được nâng từ schema v1 lên v2, giữ nguyên khóa và bài cũ. Đọc không ghi đè dữ liệu; mutation thành công mới lưu phiên bản mới. Nếu đang mở tab từ bản deploy cũ, tải lại tab trước khi tiếp tục. Xóa dữ liệu phiên cũng xóa tiến độ, trạng thái ôn và thiết lập gợi ý; JSON export gồm các trường này. Không di chuyển SQLite hoặc đồng bộ thiết bị. Xem [ADR 0004](docs/decisions/0004-learning-loop.md).
 
 ## Demo Vercel và Phase 3
 
@@ -148,5 +163,6 @@ Mutation cần cùng origin với web; POST submission cần header `Idempotency
 - [Product](PRODUCT.md), [Architecture](ARCHITECTURE.md), [Design system](DESIGN_SYSTEM.md)
 - [AI rules](AI_RULES.md), [Roadmap](ROADMAP.md), [Agent instructions](AGENTS.md)
 - [ADR: local Writing slice](docs/decisions/0001-local-writing-slice.md)
+- [Phase 4 validation](docs/validation-learning.md)
 
 Thứ tự tiếp theo: Supabase Auth/PostgreSQL và RLS → adapter AI thật + disclosure riêng → benchmark có người chấm → beta nhiều người dùng.

@@ -9,6 +9,7 @@ import { saveAttemptSchema } from "../../../packages/schemas/reading";
 import { typeLabels } from "../../../packages/domain/reading";
 import { api, ApiError } from "./api";
 import { browserDemo } from "./mode";
+import Link from "next/link";
 
 type Edits = Pick<AttemptInput, "answers" | "flagged">;
 export default function ReadingPlayer({
@@ -256,6 +257,9 @@ export default function ReadingPlayer({
             {initial.result.score}/{initial.result.total} câu đúng
           </h2>
           <p>Điểm bài luyện, không phải band IELTS.</p>
+          {browserDemo && (
+            <Link href="/progress">Xem tiến độ và ôn câu sai</Link>
+          )}
           <ul>
             {initial.result.byType.map((item) => (
               <li key={item.type}>

@@ -17,6 +17,110 @@
   background: var(--evidence);
   border-radius: 7px;
 }
+.progress-page {
+  max-width: 1160px;
+  margin: 32px auto;
+  padding: 0 20px;
+}
+.progress-page .card {
+  margin-bottom: 20px;
+  min-width: 0;
+}
+.progress-page .toolbar > label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.progress-page .toolbar select {
+  width: auto;
+}
+.progress-stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+}
+.progress-stats article {
+  display: flex;
+  flex-direction: column;
+}
+.progress-stats strong {
+  font-size: 30px;
+}
+.recommendation-grid,
+.type-progress-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(250px, 100%), 1fr));
+  gap: 20px;
+}
+.recommendation {
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  padding: 16px;
+}
+.recommendation .actions {
+  margin-top: 16px;
+}
+.type-progress meter {
+  display: block;
+  width: 100%;
+  height: 20px;
+  margin-bottom: 12px;
+  accent-color: var(--primary);
+}
+.error-counts {
+  list-style: none;
+  padding: 0;
+}
+.error-counts li {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  border-bottom: 1px solid var(--border);
+  padding: 8px 0;
+}
+.mistake-practice {
+  scroll-margin-top: 12px;
+}
+.mistake-practice fieldset {
+  border: 0;
+  padding: 12px 0;
+  min-width: 0;
+}
+.mistake-practice legend {
+  font-weight: 600;
+}
+.mistake-practice label {
+  display: block;
+  margin: 12px 0;
+}
+.mistake-practice label.review-option {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+.mistake-practice details {
+  margin-bottom: 16px;
+}
+.mistake-practice summary {
+  cursor: pointer;
+}
+.progress-page .history-item,
+.progress-page blockquote {
+  overflow-wrap: anywhere;
+}
+@media (max-width: 760px) {
+  .progress-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+  .app-header nav {
+    flex-wrap: wrap;
+  }
+  .progress-page .history-item {
+    flex-wrap: wrap;
+  }
+}
 .authoring-page {
   max-width: 1200px;
   margin: 32px auto;

@@ -203,4 +203,6 @@ POST /api/v1/attempts/:id/submit
 
 ## 12. Quy tắc thay đổi kiến trúc
 
+Phase 4 demo dùng domain analytics thuần tính từ snapshot bài đã nộp; chỉ preferences và trạng thái ôn được persist thêm trong browser state v2. Xem [ADR 0004](docs/decisions/0004-learning-loop.md). Không có dịch vụ analytics hoặc AI call mới.
+
 Mọi thay đổi ảnh hưởng schema, security boundary, provider contract hoặc content lifecycle phải được ghi bằng Architecture Decision Record trong `docs/decisions/` trước khi implement.
