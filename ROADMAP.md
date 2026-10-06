@@ -212,10 +212,16 @@ bên dưới chỉ áp dụng khi quay lại nhu cầu native app.
 
 ## Thứ tự triển khai ngay
 
-1. Giữ workflow chạy local đơn giản, build/review trước mọi triển khai.
+Checkpoint nguồn mở (2026-10-05): gói mẫu source-only đã thêm VOA/Wikipedia/Aesop và audio VOA local, với license/attribution/download riêng; thêm preview Speaking/Writing gốc. Bước sau: chọn thêm tài liệu, xác minh license mỗi asset, thiết kế câu hỏi/timestamp và reviewer duyệt trước khi publish. Common Voice cần release/download terms từ MDC; LibriVox cần clip/narrator và kiểm tra quyền theo lãnh thổ. Xem ADR 0011.
+
+Concept Learning Hub được triển khai theo MVP trước: Home hướng bước tiếp theo, Practice, sidebar/mobile navigation, Light/Dark/System và Writing split view. Các checkpoint tiếp theo: Vocabulary có nguồn và ôn cách quãng; Mock Test có contract thời gian/attempt riêng; AI Writing/Speaking thật với consent và benchmark. Không đưa điểm minh họa lên Home như band năng lực.
+
+Checkpoint phản hồi UI lần 2: thư viện Writing/Speaking riêng với màn hình làm bài, đề ngẫu nhiên bốn kỹ năng (Listening trong bài đã lưu), Writing Academic Task 1 dạng bảng gốc không chấm band và Speaking đọc/che câu hỏi bằng giọng local. Chart schema production, Task 1 evaluator và TTS đa speaker vẫn thuộc backlog; xem ADR 0009.
+
+1. Giữ workflow chạy local đơn giản, build/review trước mọi triển khai. Windows có launcher `scripts/start-local.ps1` kiểm tra Node 24 và giữ URL loopback cố định; format hỗ trợ EOL của checkout Windows.
 2. Hoàn thiện luyện tập, trạng thái lưu/lỗi và khả năng tiếp tục bài giữa các phiên.
-3. Ưu tiên backup/restore dữ liệu, nhất là Speaking chưa có restore.
+3. Checkpoint backup/restore đã triển khai: trang Sao lưu, import Writing/Reading/Tạo đề/Tiến độ, Speaking portable JSON gồm audio và Listening JSON/audio. Từng nhóm độc lập, không ghi đè dữ liệu hiện có; xem [ADR 0008](docs/decisions/0008-local-backup-and-restore.md).
 4. Khi cần lưu bền trên máy, thiết kế backend local cho cả bốn kỹ năng trước khi chuyển khỏi browser storage.
 5. Xem xét AI thật và benchmark riêng khi có nhu cầu; hoãn cloud/public beta/Expo.
 
-Các bước này là kế hoạch tiếp theo, chưa phải các tính năng đã triển khai.
+UI local và checkpoint sao lưu đã triển khai. Backend local thống nhất và AI thật là kế hoạch tiếp theo, chưa triển khai.

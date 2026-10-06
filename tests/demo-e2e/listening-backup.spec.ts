@@ -91,7 +91,7 @@ test("global deletion waits for pending restore and leaves no restored audio", a
     )
     .toBe("true");
   const other = await context.newPage();
-  await other.goto("/");
+  await other.goto("/?practice=1");
   await expect(other.getByLabel("Bài viết bằng tiếng Anh")).toBeVisible();
   await other.getByRole("button", { name: "Lịch sử bài viết" }).click();
   await other.getByRole("button", { name: "Xóa dữ liệu phiên này" }).click();
@@ -106,7 +106,9 @@ test("global deletion waits for pending restore and leaves no restored audio", a
     )
     .toBe(true);
   await page.evaluate(() => window.dispatchEvent(new Event("releaseHash")));
-  await expect(other.getByLabel("Bài viết bằng tiếng Anh")).toBeVisible();
+  await expect(
+    other.getByRole("heading", { name: "Hôm nay bạn muốn viết gì?" }),
+  ).toBeVisible();
   expect(await dbMetadata(other)).toHaveLength(0);
   await expect(page.locator(".listening-library-card")).toHaveCount(0);
   await other.close();

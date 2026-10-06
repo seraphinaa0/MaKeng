@@ -1,4 +1,4 @@
-import WritingStudio from "../components/writing-studio";
+import HomeEntry from "../components/home-entry";
 export default function Page() {
-  return <WritingStudio />;
+  return <HomeEntry />;
 }

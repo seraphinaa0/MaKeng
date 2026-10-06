@@ -60,7 +60,7 @@ test("Phase 2 demo works without API: reload, score, evidence, history", async (
 test("Writing demo returns mock feedback, persists and deletes", async ({
   page,
 }) => {
-  await page.goto("/");
+  await page.goto("/?practice=1");
   await page
     .getByLabel("Bài viết bằng tiếng Anh")
     .fill(

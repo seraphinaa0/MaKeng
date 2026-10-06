@@ -6,6 +6,11 @@ import type { Submission } from "../../../packages/schemas/writing";
 import Feedback from "./feedback";
 import { api } from "./api";
 import { browserDemo } from "./mode";
+import {
+  isTaskOne,
+  taskOnePrompts,
+} from "../../../packages/content/writing-task-one";
+import { randomItem } from "../../../packages/domain/catalog";
 
 const statusText = {
   queued: "Đang chờ chấm",
@@ -19,7 +24,7 @@ function rememberSelection(id: string | null) {
   window.history.replaceState(
     null,
     "",
-    id ? `/?submission=${encodeURIComponent(id)}` : "/",
+    id ? `/writing?submission=${encodeURIComponent(id)}` : "/writing",
   );
 }
 
@@ -28,7 +33,15 @@ export default function WritingStudio() {
   const [ready, setReady] = useState(false);
   const [tab, setTab] = useState<"write" | "history">("write");
   const [prompt, setPrompt] = useState(prompts[0].text);
+  const [practicing, setPracticing] = useState(false);
+  const [category, setCategory] = useState<"task2" | "task1">("task2");
+  const [search, setSearch] = useState("");
   const [essay, setEssay] = useState("");
+  const [draftAppearance, setDraftAppearance] = useState({
+    bold: false,
+    italic: false,
+    underline: false,
+  });
   const [consent, setConsent] = useState(false);
   const [saved, setSaved] = useState("Đang mở bản nháp…");
   const [error, setError] = useState("");
@@ -43,6 +56,29 @@ export default function WritingStudio() {
   const titleRef = useRef<HTMLHeadingElement>(null);
   const sessionRequest = useRef<Promise<{ sessionId: string }> | null>(null);
   const count = wordCount(essay);
+  const taskOne = isTaskOne(prompt);
+  const target = taskOne ? 150 : 250;
+  const catalog = (category === "task1" ? taskOnePrompts : prompts).filter(
+    (item) =>
+      `${item.title} ${item.topic} ${item.text}`
+        .toLocaleLowerCase()
+        .includes(search.toLocaleLowerCase()),
+  );
+  const dataPrompt = taskOnePrompts.find((item) => item.text === prompt);
+  function beginPrompt(text: string) {
+    if (
+      essay.trim() &&
+      text !== prompt &&
+      !confirm("Đổi đề sẽ bỏ bản nháp hiện tại. Bạn muốn tiếp tục?")
+    )
+      return;
+    if (text !== prompt) setEssay("");
+    setPrompt(text);
+    setPracticing(true);
+    setSelected(null);
+    setConsent(false);
+    window.history.replaceState(null, "", "/writing?practice=1");
+  }
 
   const loadHistory = useCallback(async () => {
     const result = await api<HistoryPage>("writing/submissions");
@@ -59,6 +95,9 @@ export default function WritingStudio() {
         }>("session"));
         if (!active) return;
         setSessionId(session.sessionId);
+        setPracticing(
+          new URLSearchParams(window.location.search).has("practice"),
+        );
         try {
           const raw = localStorage.getItem(`makeng-draft-${session.sessionId}`);
           if (raw) {
@@ -227,7 +266,7 @@ export default function WritingStudio() {
         } catch {
           /* Browser may disable storage. */
         }
-        window.location.assign("/");
+        window.location.assign("/writing");
         return;
       }
       await api(`writing/submissions/${confirmDelete}`, { method: "DELETE" });
@@ -269,6 +308,7 @@ export default function WritingStudio() {
   function newEssay() {
     setSelected(null);
     setTab("write");
+    setPracticing(false);
     rememberSelection(null);
     setError("");
   }
@@ -284,29 +324,40 @@ export default function WritingStudio() {
   }
 
   return (
-    <main id="main" className="writing-page">
+    <main
+      id="main"
+      className="writing-page"
+      data-practice={practicing && tab === "write" && !selected}
+    >
       <div className="page-heading">
         <div>
           <h1 ref={titleRef} tabIndex={-1}>
-            Writing Task 2
+            Writing · Luyện viết
           </h1>
-          <p>Chọn đề, viết bài và xem phản hồi. Hiện dùng phản hồi mẫu.</p>
+          <p>Chọn một đề trong thư viện, rồi mở không gian viết riêng.</p>
         </div>
       </div>
-      <div className="toolbar" aria-label="Writing">
-        <button aria-pressed={tab === "write" && !selected} onClick={newEssay}>
-          Viết bài
-        </button>
-        <button
-          aria-pressed={tab === "history"}
-          onClick={() => {
-            setTab("history");
-            void loadHistory().catch(() => setError("Chưa tải được lịch sử."));
-          }}
-        >
-          Lịch sử bài viết
-        </button>
-      </div>
+      {(!practicing || tab !== "write" || selected) && (
+        <div className="toolbar" aria-label="Writing">
+          <button
+            aria-pressed={tab === "write" && !selected}
+            onClick={newEssay}
+          >
+            Thư viện đề viết
+          </button>
+          <button
+            aria-pressed={tab === "history"}
+            onClick={() => {
+              setTab("history");
+              void loadHistory().catch(() =>
+                setError("Chưa tải được lịch sử."),
+              );
+            }}
+          >
+            Lịch sử bài viết
+          </button>
+        </div>
+      )}
       {error && (
         <div className="error" role="alert">
           {error}
@@ -344,7 +395,11 @@ export default function WritingStudio() {
                     {wordCount(item.essay)} từ
                   </small>
                   <h3>{item.prompt}</h3>
-                  <span className="status">{statusText[item.status]}</span>
+                  <span className="status">
+                    {isTaskOne(item.prompt)
+                      ? "Task 1 · Đã lưu bài"
+                      : statusText[item.status]}
+                  </span>
                 </div>
                 <div className="actions">
                   <button onClick={() => openItem(item)}>Xem bài</button>
@@ -385,7 +440,9 @@ export default function WritingStudio() {
         <>
           <div className="toolbar">
             <span className="status" role="status">
-              {statusText[selected.status]}
+              {isTaskOne(selected.prompt)
+                ? "Task 1 · Đã lưu bài, chưa chấm điểm"
+                : statusText[selected.status]}
             </span>
             <button onClick={() => download(selected)}>Tải bản lưu</button>
             <button
@@ -397,7 +454,9 @@ export default function WritingStudio() {
           </div>
           <section className="card">
             <h2>Đề bài</h2>
-            <p>{selected.prompt}</p>
+            <p className="essay-copy" lang="en">
+              {selected.prompt}
+            </p>
             <h2>Bản đã nộp</h2>
             <p className="essay-copy">{selected.essay}</p>
           </section>
@@ -418,85 +477,325 @@ export default function WritingStudio() {
               )}
             </div>
           )}
-          <Feedback item={selected} />
+          {isTaskOne(selected.prompt) ? (
+            <TaskOneChecklist />
+          ) : (
+            <Feedback item={selected} />
+          )}
         </>
+      ) : !practicing ? (
+        <section aria-label="Thư viện đề Writing">
+          <div className="catalog-hero">
+            <div>
+              <p className="eyebrow">CHỌN ĐỀ → VIẾT BÀI → XEM LẠI</p>
+              <h2>Hôm nay bạn muốn viết gì?</h2>
+              <p>
+                Task 1 mô tả dữ liệu. Task 2 phát triển quan điểm và lập luận.
+              </p>
+            </div>
+            <span className="catalog-emblem" aria-hidden="true">
+              Aa<span>WRITE YOUR IDEAS</span>
+            </span>
+          </div>
+          <div className="catalog-controls">
+            <div className="toolbar" aria-label="Loại bài viết">
+              <button
+                aria-pressed={category === "task2"}
+                onClick={() => setCategory("task2")}
+              >
+                Task 2 · Bài luận
+              </button>
+              {browserDemo && (
+                <button
+                  aria-pressed={category === "task1"}
+                  onClick={() => setCategory("task1")}
+                >
+                  Task 1 · Mô tả dữ liệu
+                </button>
+              )}
+            </div>
+            <label>
+              Tìm chủ đề
+              <input
+                type="search"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Giáo dục, giao thông, work…"
+              />
+            </label>
+            <button
+              className="primary"
+              disabled={!catalog.length}
+              onClick={() => {
+                const item = randomItem(catalog);
+                if (item) beginPrompt(item.text);
+              }}
+            >
+              Chọn đề ngẫu nhiên
+            </button>
+          </div>
+          <p className="muted">
+            {catalog.length} đề phù hợp ·{" "}
+            {category === "task1"
+              ? "20 phút gợi ý · 150+ từ · tự kiểm tra"
+              : "40 phút gợi ý · 250+ từ · phản hồi mẫu, chưa chấm AI"}
+          </p>
+          <div className="catalog-grid">
+            {catalog.map((item, index) => (
+              <article className="catalog-card" key={item.id}>
+                <div className="catalog-card-top">
+                  <span className="catalog-index">
+                    {String(index + 1).padStart(2, "0")}
+                  </span>
+                  <span className="status">
+                    {category === "task1" ? "TASK 1" : "TASK 2"}
+                  </span>
+                </div>
+                <small>{item.topic}</small>
+                <h3>{item.title}</h3>
+                <p>
+                  {
+                    item.text
+                      .replace(/^\[Academic Task 1\]\n/, "")
+                      .split("\n")[0]
+                  }
+                </p>
+                <button onClick={() => beginPrompt(item.text)}>
+                  Mở đề & bắt đầu viết →
+                </button>
+              </article>
+            ))}
+          </div>
+          {!catalog.length && (
+            <p className="empty">Không có đề phù hợp. Thử từ khóa khác.</p>
+          )}
+          <div className="catalog-footer">
+            <div>
+              <h3>Đã có đề riêng hoặc bản nháp?</h3>
+              <p>Tiếp tục bài đang viết mà không cần chọn lại đề.</p>
+            </div>
+            <div className="actions">
+              <button onClick={() => beginPrompt(prompt)}>
+                Tiếp tục bản nháp
+              </button>
+              <button onClick={() => beginPrompt("")}>
+                Nhập đề Task 2 riêng
+              </button>
+            </div>
+          </div>
+        </section>
       ) : (
         <form onSubmit={submit}>
-          <section className="card writing-form">
-            <label htmlFor="topic">1. Chọn đề</label>
-            <select
-              id="topic"
-              value={prompts.find((p) => p.text === prompt)?.id || "custom"}
-              onChange={(event) =>
-                setPrompt(
-                  prompts.find((p) => p.id === event.target.value)?.text || "",
-                )
-              }
-            >
-              {prompts.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.title}
-                </option>
-              ))}
-              <option value="custom">Nhập đề riêng</option>
-            </select>
-            <label htmlFor="prompt" className="sr-only">
-              Đề bài
-            </label>
-            <textarea
-              id="prompt"
-              className="prompt-input"
-              rows={3}
-              value={prompt}
-              onChange={(event) => setPrompt(event.target.value)}
-              required
-              minLength={20}
-              maxLength={3000}
-            />
-            <h2>Bài viết của bạn</h2>
-            <label htmlFor="essay" className="sr-only">
-              Bài viết bằng tiếng Anh
-            </label>
-            <textarea
-              id="essay"
-              className="essay-input"
-              value={essay}
-              onChange={(event) => setEssay(event.target.value)}
-              placeholder="Viết bài bằng tiếng Anh tại đây…"
-              required
-              minLength={30}
-              maxLength={20000}
-              lang="en"
-              spellCheck
-            />
-            <div className="row muted">
-              <span>{count} từ · mục tiêu 250+</span>
-              <span role="status">{saved}</span>
-            </div>
-            <label className="consent">
-              <input
-                type="checkbox"
-                checked={consent}
-                onChange={(event) => setConsent(event.target.checked)}
-                required
-              />
-              Đồng ý lưu bài{" "}
-              {browserDemo ? "trong trình duyệt này" : "trên máy chủ local"}.
-              Bạn có thể xóa bài trong lịch sử.
-            </label>
-            <div className="submit-row">
-              <button
-                className="primary"
-                disabled={
-                  busy ||
-                  !consent ||
-                  essay.trim().length < 30 ||
-                  prompt.trim().length < 20
-                }
-              >
-                {busy ? "Đang lưu…" : "Lưu & xem phản hồi mẫu"}
+          <section className="card writing-form writing-workspace">
+            <div className="section-heading">
+              <h2>
+                {taskOne ? "Task 1 · Mô tả dữ liệu" : "Task 2 · Bài luận"}
+              </h2>
+              <button type="button" onClick={newEssay}>
+                ← Đổi đề trong thư viện
               </button>
-              <small>Không gửi bài đến AI bên ngoài.</small>
+            </div>
+            <div className="writing-question-pane">
+              <h3 className="lumen-task-label">
+                {taskOne ? "Task 1" : "Task 2"}
+              </h3>
+              <p className="hub-kicker">QUESTION · ĐỀ BÀI</p>
+              <label htmlFor="prompt" className="sr-only">
+                Đề bài
+              </label>
+              <textarea
+                id="prompt"
+                className="prompt-input"
+                rows={3}
+                value={prompt}
+                onChange={(event) => setPrompt(event.target.value)}
+                required
+                minLength={20}
+                maxLength={3000}
+                readOnly={taskOne}
+              />
+              {dataPrompt && (
+                <div className="task-data">
+                  <table>
+                    <caption>Số liệu tự tạo · MaKeng · v1</caption>
+                    <thead>
+                      <tr>
+                        {dataPrompt.columns.map((column) => (
+                          <th key={column} scope="col">
+                            {column}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {dataPrompt.rows.map((row) => (
+                        <tr key={row[0]}>
+                          {row.map((cell, index) =>
+                            index === 0 ? (
+                              <th key={index} scope="row">
+                                {cell}
+                              </th>
+                            ) : (
+                              <td key={index}>{cell}</td>
+                            ),
+                          )}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+            <div className="writing-editor-pane">
+              <div
+                className="editor-toolbar"
+                role="toolbar"
+                aria-label="Draft appearance (whole text)"
+              >
+                <button
+                  type="button"
+                  aria-label="Bold whole draft"
+                  aria-pressed={draftAppearance.bold}
+                  onClick={() =>
+                    setDraftAppearance((value) => ({
+                      ...value,
+                      bold: !value.bold,
+                    }))
+                  }
+                >
+                  <b>B</b>
+                </button>
+                <button
+                  type="button"
+                  aria-label="Italic whole draft"
+                  aria-pressed={draftAppearance.italic}
+                  onClick={() =>
+                    setDraftAppearance((value) => ({
+                      ...value,
+                      italic: !value.italic,
+                    }))
+                  }
+                >
+                  <i>I</i>
+                </button>
+                <button
+                  type="button"
+                  aria-label="Underline whole draft"
+                  aria-pressed={draftAppearance.underline}
+                  onClick={() =>
+                    setDraftAppearance((value) => ({
+                      ...value,
+                      underline: !value.underline,
+                    }))
+                  }
+                >
+                  <u>U</u>
+                </button>
+                <span>Plain-text draft</span>
+              </div>
+              <div className="writing-cue">
+                <h2>Bài viết của bạn</h2>
+                <span>
+                  {taskOne
+                    ? "Mở bài → Tổng quan → So sánh số liệu nổi bật"
+                    : "Bắt đầu với một ý. Phát triển từng đoạn."}
+                </span>
+              </div>
+              <label htmlFor="essay" className="sr-only">
+                Bài viết bằng tiếng Anh
+              </label>
+              <textarea
+                id="essay"
+                className="essay-input"
+                style={{
+                  fontWeight: draftAppearance.bold ? 700 : 400,
+                  fontStyle: draftAppearance.italic ? "italic" : "normal",
+                  textDecoration: draftAppearance.underline
+                    ? "underline"
+                    : "none",
+                }}
+                value={essay}
+                onChange={(event) => setEssay(event.target.value)}
+                placeholder="Start writing your essay here…"
+                required
+                minLength={30}
+                maxLength={20000}
+                lang="en"
+                spellCheck
+              />
+              <progress
+                className="word-progress"
+                value={Math.min(count, target)}
+                max={target}
+                aria-label={`Số từ so với mục tiêu gợi ý ${target} từ`}
+              />
+              <div className="row muted">
+                <span>
+                  {count} từ · mục tiêu {target}+
+                </span>
+                <span role="status">{saved}</span>
+              </div>
+              <label className="consent">
+                <input
+                  type="checkbox"
+                  checked={consent}
+                  onChange={(event) => setConsent(event.target.checked)}
+                  required
+                />
+                Đồng ý lưu bài{" "}
+                {browserDemo ? "trong trình duyệt này" : "trên máy chủ local"}.
+                Bạn có thể xóa bài trong lịch sử.
+              </label>
+              <div className="submit-row">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setTab("history");
+                    void loadHistory().catch(() =>
+                      setError("Chưa tải được lịch sử."),
+                    );
+                  }}
+                >
+                  Lịch sử bài viết
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    try {
+                      localStorage.setItem(
+                        `makeng-draft-${sessionId}`,
+                        JSON.stringify({ prompt, essay }),
+                      );
+                      setSaved("Đã lưu nháp trên thiết bị");
+                    } catch {
+                      setSaved(
+                        "Không lưu được nháp. Hãy sao chép bài trước khi rời trang.",
+                      );
+                    }
+                  }}
+                >
+                  Save draft
+                </button>
+                <button
+                  className="primary"
+                  aria-label={
+                    busy
+                      ? "Đang lưu…"
+                      : taskOne
+                        ? "Lưu bài Task 1 & tự kiểm tra"
+                        : "Lưu & xem phản hồi mẫu"
+                  }
+                  disabled={
+                    busy ||
+                    !consent ||
+                    essay.trim().length < 30 ||
+                    prompt.trim().length < 20
+                  }
+                >
+                  {busy ? "Saving…" : "Submit"}
+                </button>
+                <small>Không gửi bài đến AI bên ngoài.</small>
+              </div>
             </div>
           </section>
         </form>
@@ -533,5 +832,20 @@ export default function WritingStudio() {
         MaKeng · Bài luyện độc lập, không phải kết quả IELTS chính thức.
       </footer>
     </main>
+  );
+}
+
+function TaskOneChecklist() {
+  return (
+    <section className="card">
+      <h2>Tự kiểm tra bài Task 1</h2>
+      <p>Đã lưu bài. Chưa có chấm AI hoặc band cho Task 1.</p>
+      <ul>
+        <li>Có đoạn tổng quan nêu xu hướng hoặc khác biệt lớn nhất?</li>
+        <li>Đã chọn các số liệu nổi bật và so sánh thay vì liệt kê tất cả?</li>
+        <li>Số liệu, đơn vị và mốc thời gian có chính xác?</li>
+        <li>Không thêm ý kiến cá nhân hoặc nguyên nhân không có trong đề?</li>
+      </ul>
+    </section>
   );
 }

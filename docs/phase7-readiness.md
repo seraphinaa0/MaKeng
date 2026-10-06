@@ -21,16 +21,16 @@ và trình duyệt trên máy Windows của người dùng.
 
 ## Ưu tiên phát triển tiếp
 
-| Hạng mục | Hiện tại | Công việc đề xuất |
-| --- | --- | --- |
-| Chạy và review | Loopback, không cần deploy | Kiểm tra khởi động, lưu/mở lại bài và ghi âm trên máy sử dụng thực tế |
-| Sao lưu | Export khác nhau giữa các kỹ năng; Speaking chưa có restore | Thiết kế backup/restore có version, validation và xác nhận nhập audio; không hứa export hiện tại khôi phục toàn bộ app |
-| Dữ liệu bền | Theo browser/origin; SQLite chỉ Writing/Reading | Nếu cần, mở rộng backend local để lưu đủ lịch sử/audio trên máy trước khi đổi chế độ mặc định |
-| UI học tập | Bốn kỹ năng với giới hạn mock/manual | Hoàn thiện luồng luyện, báo trạng thái lưu, tiếp tục bài và xử lý lỗi |
-| AI thật | Chưa có live provider | Bước riêng khi cần: adapter server/worker local, schema/evaluation và consent trước khi gửi dữ liệu |
+| Hạng mục       | Hiện tại                                                                                                     | Công việc đề xuất                                                                                   |
+| -------------- | ------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------- |
+| Chạy và review | Loopback, không cần deploy                                                                                   | Kiểm tra khởi động, lưu/mở lại bài và ghi âm trên máy sử dụng thực tế                               |
+| Sao lưu        | Trang `/backup` có export/restore Writing/Reading/Tạo đề/Tiến độ, Speaking gồm audio và Listening JSON/audio | Kiểm tra bản sao định kỳ; nháp chưa lưu và SQLite vẫn ngoài phạm vi                                 |
+| Dữ liệu bền    | Theo browser/origin; SQLite chỉ Writing/Reading                                                              | Nếu cần, mở rộng backend local để lưu đủ lịch sử/audio trên máy trước khi đổi chế độ mặc định       |
+| UI học tập     | Bốn kỹ năng với giới hạn mock/manual                                                                         | Hoàn thiện luồng luyện, báo trạng thái lưu, tiếp tục bài và xử lý lỗi                               |
+| AI thật        | Chưa có live provider                                                                                        | Bước riêng khi cần: adapter server/worker local, schema/evaluation và consent trước khi gửi dữ liệu |
 
-Đây là backlog đề xuất, chưa triển khai backup chung, backend local đủ bốn kỹ năng
-hoặc AI/STT thật. AI chạy qua dịch vụ bên ngoài vẫn gửi dữ liệu ra ngoài máy dù
+Checkpoint sao lưu/khôi phục đã được triển khai theo [ADR 0008](decisions/0008-local-backup-and-restore.md), từng nhóm độc lập. Backend local đủ bốn kỹ năng
+và AI/STT thật chưa được triển khai. AI chạy qua dịch vụ bên ngoài vẫn gửi dữ liệu ra ngoài máy dù
 web chạy local; mô hình AI trên máy là một lựa chọn khác cần đánh giá riêng.
 
 ## Khi quay lại mobile hoặc public

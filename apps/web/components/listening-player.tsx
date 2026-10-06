@@ -5,6 +5,7 @@ import {
   type StoredListening,
 } from "../../../packages/demo/listening-store";
 import { listeningResult } from "../../../packages/domain/listening";
+import { applyAudioOutput } from "./audio-preferences";
 
 export default function ListeningPlayer({
   lesson,
@@ -25,6 +26,10 @@ export default function ListeningPlayer({
   const [url, setUrl] = useState("");
   const [busy, setBusy] = useState(false);
   const [active, setActive] = useState("");
+  const [playing, setPlaying] = useState(false);
+  const [elapsed, setElapsed] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const [rate, setRate] = useState(1);
   const audio = useRef<HTMLAudioElement>(null);
   const blob = useRef(lesson.blob).current;
   const clipEnd = useRef<number | null>(null);
@@ -156,8 +161,25 @@ export default function ListeningPlayer({
           src={url || undefined}
           controls
           preload="metadata"
+          onPlay={() => setPlaying(true)}
+          onPause={() => setPlaying(false)}
+          onLoadedMetadata={(event) => {
+            void applyAudioOutput(event.currentTarget).catch((error: unknown) =>
+              setError(
+                error instanceof Error
+                  ? error.message
+                  : "Không đổi được đầu ra âm thanh.",
+              ),
+            );
+            setDuration(
+              Number.isFinite(audio.current?.duration)
+                ? audio.current!.duration
+                : 0,
+            );
+          }}
           onTimeUpdate={() => {
             const time = audio.current?.currentTime ?? 0;
+            setElapsed(time);
             setActive(
               lesson.content.transcript.cues.find(
                 (c) => c.start <= time && c.end > time,
@@ -183,11 +205,95 @@ export default function ListeningPlayer({
               );
           }}
         />
+        <div className="lumen-audio-progress">
+          <span className="audio-section">Listening practice</span>
+          <input
+            type="range"
+            aria-label="Vị trí audio"
+            min={0}
+            max={duration || 1}
+            step={0.1}
+            value={Math.min(elapsed, duration || 1)}
+            disabled={!duration}
+            onChange={(e) => {
+              if (audio.current) {
+                clipEnd.current = null;
+                audio.current.currentTime = Number(e.target.value);
+                setElapsed(Number(e.target.value));
+              }
+            }}
+          />
+          <span>
+            {Math.floor(elapsed / 60)
+              .toString()
+              .padStart(2, "0")}
+            :
+            {Math.floor(elapsed % 60)
+              .toString()
+              .padStart(2, "0")}{" "}
+            /{" "}
+            {Math.floor(duration / 60)
+              .toString()
+              .padStart(2, "0")}
+            :
+            {Math.floor(duration % 60)
+              .toString()
+              .padStart(2, "0")}
+          </span>
+        </div>
+        <div className="lumen-audio-buttons">
+          {[0.75, 1, 1.25].map((speed) => (
+            <button
+              key={speed}
+              aria-pressed={rate === speed}
+              onClick={() => {
+                setRate(speed);
+                if (audio.current) audio.current.playbackRate = speed;
+              }}
+            >
+              {speed}×
+            </button>
+          ))}
+          <button
+            className="primary audio-orb"
+            aria-label={playing ? "Pause audio" : "Play audio"}
+            onClick={async () => {
+              if (!audio.current) return;
+              clipEnd.current = null;
+              if (playing) audio.current.pause();
+              else {
+                try {
+                  await audio.current.play();
+                } catch {
+                  setError("Không phát được audio. Hãy thử lại.");
+                }
+              }
+            }}
+          >
+            {playing ? "Ⅱ" : "▶"}
+          </button>
+          <button
+            aria-label="Replay audio"
+            onClick={() => {
+              if (audio.current) {
+                clipEnd.current = null;
+                audio.current.currentTime = 0;
+                setElapsed(0);
+              }
+            }}
+          >
+            ↻
+          </button>
+          <span className="audio-transcript-note">
+            Transcript after submission
+          </span>
+        </div>
         <label>
           Tốc độ nghe
           <select
-            defaultValue="1"
+            value={rate}
             onChange={(e) => {
+              setRate(Number(e.target.value));
               if (audio.current)
                 audio.current.playbackRate = Number(e.target.value);
             }}

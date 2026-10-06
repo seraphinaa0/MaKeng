@@ -2,6 +2,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { browserDemo } from "./mode";
 import { useSpeakingRecorder } from "./use-speaking-recorder";
+import { applyAudioOutput } from "./audio-preferences";
 import { useAudioExpiry } from "./use-audio-expiry";
 import { blankResponse } from "../../../packages/domain/speaking";
 import {
@@ -15,6 +16,9 @@ import {
   type StoredSpeaking,
 } from "../../../packages/demo/speaking-store";
 import type { SpeakingQuestion } from "../../../packages/schemas/speaking";
+import { speakingCatalog } from "../../../packages/content/speaking";
+import { randomItem } from "../../../packages/domain/catalog";
+import { useQuestionSpeech } from "./use-question-speech";
 
 function message(error: unknown) {
   return error instanceof Error
@@ -38,9 +42,15 @@ export default function SpeakingStudio() {
   const [notice, setNotice] = useState("");
   const [consent, setConsent] = useState(false);
   const [days, setDays] = useState<1 | 7 | 30>(7);
+  const [chosen, setChosen] = useState(speakingCatalog[0]);
+  const [configure, setConfigure] = useState(false);
+  const [catalogTab, setCatalogTab] = useState<"library" | "history">(
+    "library",
+  );
   const alive = useRef(false);
   const loadSequence = useRef(0);
   const lastSeen = useRef(new Map<string, number>());
+  const openedInitial = useRef(false);
   const reload = useCallback(async (external = false) => {
     const sequence = ++loadSequence.current;
     try {
@@ -54,6 +64,15 @@ export default function SpeakingStudio() {
       lastSeen.current = new Map(
         values.map((value) => [value.id, value.revision]),
       );
+      if (!openedInitial.current) {
+        openedInitial.current = true;
+        const id = new URLSearchParams(window.location.search).get("session");
+        if (id && values.some((value) => value.id === id)) setSelected(id);
+        else if (id)
+          setNotice(
+            "Lượt luyện đã hết hạn hoặc không còn trên thiết bị. Hãy chọn bộ đề mới.",
+          );
+      }
       if (changed)
         setSessions((previous) =>
           values.map(
@@ -122,7 +141,7 @@ export default function SpeakingStudio() {
     setBusy(true);
     setError("");
     try {
-      const added = await addSpeaking(days, consent);
+      const added = await addSpeaking(days, consent, chosen);
       await reload();
       setSelected(added.id);
       setNotice("");
@@ -140,15 +159,15 @@ export default function SpeakingStudio() {
     );
   }
   return (
-    <main id="main" className="speaking-page">
+    <main id="main" className="speaking-page" data-practice={Boolean(session)}>
       <div className="page-heading">
-        <h1>Speaking</h1>
+        <h1>Speaking · Luyện nói</h1>
         <p>Luyện nói, nghe lại và chọn một mục tiêu cho lần sau.</p>
       </div>
       <p className="notice">
-        Đề gốc thử nghiệm · Part 1/2/3 rút gọn, không phải bài thi đầy đủ.
-        Transcript nhập tay; checklist tự review, không có chấm AI hoặc band
-        IELTS.
+        Đề gốc thử nghiệm · Part 1/2/3 rút gọn, không phải bài thi đầy đủ. Bản
+        chép lời nhập tay; tự đánh giá bằng danh sách kiểm tra, không có chấm AI
+        hoặc band IELTS.
       </p>
       {error && (
         <div className="error" role="alert">
@@ -165,129 +184,210 @@ export default function SpeakingStudio() {
           key={session.id}
           session={session}
           updated={updated}
-          close={() => setSelected(null)}
+          close={() => {
+            setSelected(null);
+            setCatalogTab("history");
+            setConfigure(false);
+          }}
         />
       ) : (
         <>
-          <section className="card">
-            <h2>Bắt đầu lượt luyện</h2>
-            <p>
-              Everyday learning · 5 câu, từ thói quen học tập đến kỹ năng thực
-              tế.
-            </p>
-            <p className="muted">
-              Ghi âm chỉ khi bấm Ghi âm; chưa lưu cho đến khi bấm Lưu câu trả
-              lời. Không gửi audio/transcript tới máy chủ. Rời tab sẽ dừng
-              microphone. Có thể luyện chỉ bằng transcript.
-            </p>
-            <label>
-              Hạn lưu
-              <select
-                value={days}
-                onChange={(e) =>
-                  setDays(
-                    e.target.value === "1"
-                      ? 1
-                      : e.target.value === "30"
-                        ? 30
-                        : 7,
-                  )
-                }
-              >
-                {[1, 7, 30].map((d) => (
-                  <option key={d} value={d}>
-                    {d} ngày
-                  </option>
-                ))}
-              </select>
-            </label>
-            <p className="muted">
-              Tự dọn khi mở lại, lấy nét tab hoặc hết hạn khi đang mở. Không
-              chạy xóa nền lúc trình duyệt đã đóng.
-            </p>
-            <label className="consent">
-              <input
-                type="checkbox"
-                checked={consent}
-                onChange={(e) => setConsent(e.target.checked)}
-              />
-              Tôi đồng ý lưu audio, transcript và tự review trên thiết bị này;
-              tôi có thể xóa bất cứ lúc nào.
-            </label>
+          <div className="toolbar">
             <button
-              className="primary"
-              disabled={!consent || !ready || busy}
-              onClick={() => void create()}
+              aria-pressed={catalogTab === "library"}
+              onClick={() => setCatalogTab("library")}
             >
-              Bắt đầu Speaking
+              Thư viện đề nói
             </button>
-          </section>
-          <section aria-label="Lịch sử Speaking">
-            <h2>Lịch sử Speaking</h2>
-            {!ready ? (
-              error ? (
-                <p>Chưa đọc được lịch sử. Thử tải lại ở trên.</p>
-              ) : (
-                <p role="status">Đang tải...</p>
-              )
-            ) : ready && sessions.length === 0 ? (
-              <p className="empty">
-                Chưa có lượt luyện. Tạo lượt đầu tiên ở trên.
-              </p>
-            ) : (
-              sessions.map((s) => (
-                <article key={s.id} className="history-item">
-                  <div>
-                    <h3>{s.set.title}</h3>
+            <button
+              aria-pressed={catalogTab === "history"}
+              onClick={() => setCatalogTab("history")}
+            >
+              Lịch sử Speaking
+            </button>
+          </div>
+          {catalogTab === "library" && !configure && (
+            <section aria-label="Thư viện đề Speaking">
+              <div className="catalog-hero">
+                <div>
+                  <p className="eyebrow">
+                    CHỌN CHỦ ĐỀ → NGHE CÂU HỎI → TRẢ LỜI
+                  </p>
+                  <h2>Bắt đầu một cuộc trò chuyện.</h2>
+                  <p>
+                    Ba bộ đề gốc. Mỗi bộ có 5 câu từ chuyện gần gũi đến thảo
+                    luận sâu.
+                  </p>
+                  <button
+                    className="primary"
+                    onClick={() => {
+                      setChosen(randomItem(speakingCatalog)!);
+                      setConfigure(true);
+                    }}
+                  >
+                    Chọn đề ngẫu nhiên
+                  </button>
+                </div>
+                <span className="catalog-emblem" aria-hidden="true">
+                  “”<span>SPEAK YOUR MIND</span>
+                </span>
+              </div>
+              <div className="catalog-grid">
+                {speakingCatalog.map((set, index) => (
+                  <article className="catalog-card" key={set.id}>
+                    <div className="catalog-card-top">
+                      <span className="catalog-index">0{index + 1}</span>
+                      <span className="status">PART 1 · 2 · 3</span>
+                    </div>
+                    <h3>{set.title}</h3>
                     <p>
-                      {s.status === "completed" ? "Đã hoàn tất" : "Đang luyện"}{" "}
-                      · {Object.keys(s.responses).length}/5 câu đã lưu
+                      {
+                        [
+                          "Học tập, thói quen và kỹ năng thực tế.",
+                          "Nơi sống, con người và cộng đồng.",
+                          "Công nghệ, thiết bị và quản lý thời gian.",
+                        ][index]
+                      }
                     </p>
-                    <p className="muted">
-                      {new Date(s.createdAt).toLocaleString("vi-VN")} · Xóa sau{" "}
-                      {new Date(s.expiresAt).toLocaleString("vi-VN")}
-                    </p>
-                  </div>
-                  <div className="actions">
+                    <small>5 câu · Có giọng đọc & chế độ che câu hỏi</small>
                     <button
-                      disabled={busy}
                       onClick={() => {
-                        setSelected(s.id);
-                        setNotice("");
+                        setChosen(set);
+                        setConfigure(true);
                       }}
                     >
-                      {s.status === "completed"
-                        ? "Xem lượt luyện"
-                        : "Tiếp tục luyện"}
+                      Chọn bộ đề này →
                     </button>
-                    <button
-                      className="danger"
-                      disabled={busy}
-                      onClick={async () => {
-                        if (
-                          !confirm(
-                            "Xóa phiên Speaking, audio và transcript? Không thể hoàn tác.",
+                  </article>
+                ))}
+              </div>
+            </section>
+          )}
+          {catalogTab === "library" && configure && (
+            <section className="card">
+              <h2>Bắt đầu lượt luyện</h2>
+              <p>{chosen.title} · 5 câu · Part 1/2/3</p>
+              <button onClick={() => setConfigure(false)}>
+                ← Chọn bộ đề khác
+              </button>
+              <p className="muted">
+                Ghi âm chỉ khi bấm Ghi âm; chưa lưu cho đến khi bấm Lưu câu trả
+                lời. Không gửi audio/transcript tới máy chủ. Rời tab sẽ dừng
+                microphone. Có thể luyện chỉ bằng transcript.
+              </p>
+              <label>
+                Hạn lưu
+                <select
+                  value={days}
+                  onChange={(e) =>
+                    setDays(
+                      e.target.value === "1"
+                        ? 1
+                        : e.target.value === "30"
+                          ? 30
+                          : 7,
+                    )
+                  }
+                >
+                  {[1, 7, 30].map((d) => (
+                    <option key={d} value={d}>
+                      {d} ngày
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <p className="muted">
+                Tự dọn khi mở lại, lấy nét tab hoặc hết hạn khi đang mở. Không
+                chạy xóa nền lúc trình duyệt đã đóng.
+              </p>
+              <label className="consent">
+                <input
+                  type="checkbox"
+                  checked={consent}
+                  onChange={(e) => setConsent(e.target.checked)}
+                />
+                Tôi đồng ý lưu audio, transcript và tự review trên thiết bị này;
+                tôi có thể xóa bất cứ lúc nào.
+              </label>
+              <button
+                className="primary"
+                disabled={!consent || !ready || busy}
+                onClick={() => void create()}
+              >
+                Bắt đầu Speaking
+              </button>
+            </section>
+          )}
+          {catalogTab === "history" && (
+            <section aria-label="Lịch sử Speaking">
+              <h2>Lịch sử Speaking</h2>
+              {!ready ? (
+                error ? (
+                  <p>Chưa đọc được lịch sử. Thử tải lại ở trên.</p>
+                ) : (
+                  <p role="status">Đang tải...</p>
+                )
+              ) : ready && sessions.length === 0 ? (
+                <p className="empty">
+                  Chưa có lượt luyện. Tạo lượt đầu tiên ở trên.
+                </p>
+              ) : (
+                sessions.map((s) => (
+                  <article key={s.id} className="history-item">
+                    <div>
+                      <h3>{s.set.title}</h3>
+                      <p>
+                        {s.status === "completed"
+                          ? "Đã hoàn tất"
+                          : "Đang luyện"}{" "}
+                        · {Object.keys(s.responses).length}/5 câu đã lưu
+                      </p>
+                      <p className="muted">
+                        {new Date(s.createdAt).toLocaleString("vi-VN")} · Xóa
+                        sau {new Date(s.expiresAt).toLocaleString("vi-VN")}
+                      </p>
+                    </div>
+                    <div className="actions">
+                      <button
+                        disabled={busy}
+                        onClick={() => {
+                          setSelected(s.id);
+                          setNotice("");
+                        }}
+                      >
+                        {s.status === "completed"
+                          ? "Xem lượt luyện"
+                          : "Tiếp tục luyện"}
+                      </button>
+                      <button
+                        className="danger"
+                        disabled={busy}
+                        onClick={async () => {
+                          if (
+                            !confirm(
+                              "Xóa phiên Speaking, audio và transcript? Không thể hoàn tác.",
+                            )
                           )
-                        )
-                          return;
-                        setBusy(true);
-                        try {
-                          await deleteSpeaking(s.id);
-                          await reload();
-                        } catch (cause) {
-                          setError(message(cause));
-                        } finally {
-                          setBusy(false);
-                        }
-                      }}
-                    >
-                      Xóa phiên
-                    </button>
-                  </div>
-                </article>
-              ))
-            )}
-          </section>
+                            return;
+                          setBusy(true);
+                          try {
+                            await deleteSpeaking(s.id);
+                            await reload();
+                          } catch (cause) {
+                            setError(message(cause));
+                          } finally {
+                            setBusy(false);
+                          }
+                        }}
+                      >
+                        Xóa phiên
+                      </button>
+                    </div>
+                  </article>
+                ))
+              )}
+            </section>
+          )}
         </>
       )}
       <footer>
@@ -308,6 +408,7 @@ function SpeakingSession({
   close: () => void;
 }) {
   const [index, setIndex] = useState(0);
+  const [hidden, setHidden] = useState(false);
   const [dirty, setDirty] = useState(false);
   const question = session.set.questions[index];
   function leave(action: () => void) {
@@ -351,7 +452,8 @@ function SpeakingSession({
       <p className="muted">
         JSON chứa đề, transcript và checklist đã lưu, không chứa audio (
         {Object.keys(blobs).length} bản ghi); tải từng audio bên dưới. Chưa hỗ
-        trợ khôi phục JSON.
+        trợ khôi phục định dạng JSON cũ này. Để có bản sao gồm audio có thể khôi
+        phục, mở <a href="/backup">Sao lưu</a>.
       </p>
       {session.status === "completed" && (
         <p className="result-summary" role="status">
@@ -382,6 +484,8 @@ function SpeakingSession({
         question={question}
         updated={updated}
         onDirty={setDirty}
+        hidden={hidden}
+        onHidden={setHidden}
       />
     </>
   );
@@ -392,11 +496,15 @@ function SpeakingAnswer({
   question,
   updated,
   onDirty,
+  hidden,
+  onHidden,
 }: {
   session: StoredSpeaking;
   question: SpeakingQuestion;
   updated: (next: StoredSpeaking) => void;
   onDirty: (dirty: boolean) => void;
+  hidden: boolean;
+  onHidden: (hidden: boolean) => void;
 }) {
   const saved = session.responses[question.id] ?? blankResponse();
   const [response, setResponse] = useState(saved);
@@ -405,6 +513,7 @@ function SpeakingAnswer({
   const [prep, setPrep] = useState<number | null>(null);
   const [prepEnd, setPrepEnd] = useState<number | null>(null);
   const recorder = useSpeakingRecorder(question.limitSeconds);
+  const speech = useQuestionSpeech();
   const blob = recorder.value?.blob ?? session.blobs[question.id] ?? null;
   const [url, setUrl] = useState("");
   const player = useRef<HTMLAudioElement>(null);
@@ -508,13 +617,86 @@ function SpeakingAnswer({
         <p className="muted">
           Part {question.part} · {session.set.title}
         </p>
-        <h2>{question.prompt}</h2>
-        {question.bullets.length > 0 && (
+        {hidden ? (
+          <div className="hidden-question">
+            <span aria-hidden="true">◎</span>
+            <h2>Câu hỏi đang được che</h2>
+            <p>
+              Nghe để hiểu, rồi trả lời theo ý của bạn. Bấm Hiện câu hỏi nếu
+              cần.
+            </p>
+          </div>
+        ) : (
+          <h2 lang="en">{question.prompt}</h2>
+        )}
+        {!hidden && question.bullets.length > 0 && (
           <ul>
             {question.bullets.map((b) => (
               <li key={b}>{b}</li>
             ))}
           </ul>
+        )}
+        <div className="speech-controls">
+          <button aria-pressed={hidden} onClick={() => onHidden(!hidden)}>
+            {hidden ? "Hiện câu hỏi" : "Che câu hỏi"}
+          </button>
+          <button
+            disabled={capturing || busy || !speech.voices.length}
+            onClick={() =>
+              speech.read([question.prompt, ...question.bullets].join(". "))
+            }
+          >
+            Nghe câu hỏi
+          </button>
+          {speech.speaking && <button onClick={speech.stop}>Dừng đọc</button>}
+          <details className="voice-settings">
+            <summary>Voice settings</summary>
+            <label>
+              Giọng đọc tiếng Anh
+              <select
+                disabled={capturing || !speech.voices.length}
+                value={speech.voiceURI || speech.voices[0]?.voiceURI || ""}
+                onChange={(e) => {
+                  speech.stop();
+                  speech.setVoiceURI(e.target.value);
+                }}
+              >
+                {!speech.voices.length && (
+                  <option value="">Chưa có giọng trên thiết bị</option>
+                )}
+                {speech.voices.map((voice) => (
+                  <option key={voice.voiceURI} value={voice.voiceURI}>
+                    {voice.name} · {voice.lang}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label>
+              Tốc độ đọc
+              <select
+                value={speech.rate}
+                disabled={capturing}
+                onChange={(e) => {
+                  speech.stop();
+                  speech.setRate(Number(e.target.value));
+                }}
+              >
+                <option value="0.8">Chậm · 0.8×</option>
+                <option value="1">Bình thường · 1×</option>
+                <option value="1.2">Nhanh · 1.2×</option>
+              </select>
+            </label>
+          </details>
+        </div>
+        <p className="muted">
+          {speech.voices.length
+            ? "Giọng đọc trên thiết bị · Không dùng dịch vụ TTS bên ngoài."
+            : "Chưa tìm thấy giọng tiếng Anh local. Cài giọng English trong cài đặt Speech của hệ điều hành hoặc dùng trình duyệt hỗ trợ; bạn vẫn có thể luyện bằng chữ."}
+        </p>
+        {speech.error && (
+          <p role="alert" className="error">
+            {speech.error}
+          </p>
         )}
         <p className="muted">
           {question.part === 2
@@ -542,9 +724,12 @@ function SpeakingAnswer({
           </div>
         )}
         {editable && (
-          <div className="actions">
+          <div
+            className="actions recording-actions"
+            data-recording={recorder.phase === "recording"}
+          >
             <button
-              className="primary"
+              className="primary record-orb"
               disabled={busy || capturing || (prep !== null && prep > 0)}
               onClick={() => {
                 if (
@@ -553,10 +738,21 @@ function SpeakingAnswer({
                 )
                   return;
                 player.current?.pause();
+                speech.stop();
                 void recorder.begin();
               }}
             >
-              Ghi âm
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.6"
+                strokeLinecap="round"
+                aria-hidden="true"
+              >
+                <path d="M9 4a3 3 0 0 1 6 0v8a3 3 0 0 1-6 0ZM5 11v1a7 7 0 0 0 14 0v-1M12 19v3m-4 0h8" />
+              </svg>
+              <span>Ghi âm</span>
             </button>
             {recorder.phase === "recording" && (
               <button onClick={recorder.stop}>Dừng ghi âm</button>
@@ -583,6 +779,16 @@ function SpeakingAnswer({
         {blob && (
           <div className="listening-audio">
             <audio
+              onLoadedMetadata={(event) => {
+                void applyAudioOutput(event.currentTarget).catch(
+                  (error: unknown) =>
+                    setError(
+                      error instanceof Error
+                        ? error.message
+                        : "Không đổi được đầu ra âm thanh.",
+                    ),
+                );
+              }}
               ref={player}
               aria-label="Nghe lại câu trả lời"
               controls
@@ -647,14 +853,15 @@ function SpeakingAnswer({
         )}
       </div>
       <div className="card">
-        <h2>Nghe lại & tự review</h2>
+        <h2>Nghe lại & tự đánh giá</h2>
         <p className="muted">
-          Nhập những gì bạn đã nói; chưa có nhận dạng giọng nói. Checklist chỉ
-          ghi lại việc bạn đã tự kiểm tra, không xác nhận chất lượng câu trả
-          lời.
+          Nhập những gì bạn đã nói; chưa có nhận dạng giọng nói. Danh sách bên
+          dưới chỉ ghi lại việc bạn đã tự kiểm tra, không xác nhận chất lượng
+          câu trả lời.
         </p>
         <label>
           Transcript nhập tay
+          <small className="muted"> · Bản chép lại những gì bạn đã nói</small>
           <textarea
             rows={7}
             maxLength={12000}

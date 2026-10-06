@@ -2,6 +2,77 @@
 
 ## 1. Mục tiêu trải nghiệm
 
+### Concept hiện hành — Reference-first lumen rebuild
+
+Yêu cầu expressive motion thay thế pass hiệu ứng nhẹ trước đó: launcher Home
+có flash/dải sáng conic chạy quanh viền khi hover/focus và gợi ý trượt-fade mỗi
+2 giây khi trống. Icon SVG lật trang sách, nhịp tai nghe, microphone và bút viết.
+Sidebar có pill đo vị trí thật; skill/navigation chuyển cảnh slide/blur/stretch.
+Theme Ambient là màu lavender tĩnh, không phát âm thanh. Settings `/settings`
+tách cấu hình/quyền/audio/sao lưu; avatar là cá nhân hóa, Pomodoro và tùy chỉnh
+motion. Logo SVG sách/M/đường tiến lên. Reduced motion và lựa chọn tắt motion
+được ưu tiên. Đây là yêu cầu cụ thể của user, thay thế nguyên tắc không animation
+lặp ở mục 9 cho beam/icon chỉ khi hover và gợi ý ô trống. Xem ADR 0016.
+
+Sửa theo screenshot preview: sidebar nằm ngoài header, cố định 170px trên
+desktop để không bị `order` của navigation cũ đẩy xuống dưới Settings/Pro.
+Practice dùng tile ngang gọn (icon, tên, metadata), Learning mode riêng bên
+dưới; bỏ mô tả/translation/footer lặp. Có nút Sáng/Tối ngay header, giữ lựa chọn
+theme đã lưu. Dark không còn radial wash xám sáng. Xem ADR 0015.
+
+Pass thiết kế bằng skill GitHub `frontend-design`: dùng Manrope variable tự
+host (OFL), nhịp chữ rõ hơn, Practice grid 2×2 với action mở thư viện và metadata
+thật. Mock Test không có arrow giả. Xem ADR 0014; ảnh lumen vẫn là brief ưu tiên.
+
+Yêu cầu mới nhất thay thế toàn bộ cấu trúc dashboard, không chỉ đổi skin.
+Layout chỉ import `globals.css` cho các luồng nghiệp vụ cũ và `lumen.css` cho
+presentation mới; không import hai skin Learning Hub / Quiet Workspace.
+Home dùng cấu trúc trong ảnh: lời chào, launcher, bốn skill pill, một continuation
+card và ba focus row. Không còn breadcrumb, analytics/band card hay banner ở đầu.
+Mobile có lời chào riêng, continuation gọn và bottom navigation năm mục.
+Settings giữ theme, disclosures, bốn thư viện, công cụ nguồn/tạo đề/sao lưu.
+Brand hiển thị MaKeng theo yêu cầu khôi phục tên mới nhất; lumen chỉ là tên
+ảnh tham chiếu và class CSS nội bộ. Dữ liệu và storage keys MaKeng giữ nguyên.
+
+Khi có bài đang luyện, shell Home được thay bằng thanh Back / skill Practice /
+Learning mode / Settings. Reading chia passage/questions, có Previous/Next và
+Highlight/Notes; note local không nằm trong backup, dùng key phiên để được xóa
+cùng dữ liệu phiên. Writing có toolbar thay đổi kiểu hiển thị toàn bản nháp,
+không phải rich-text theo vùng chọn; nội dung lưu vẫn plain text. Listening dùng
+custom controls thao tác audio thật. Speaking tách interview và self-review,
+ẩn voice settings trong disclosure. Progress vẽ accuracy từ attempt thực tế,
+không tạo band curve. Xem ADR 0013.
+
+Hai ảnh trang trí được tạo bằng imagegen, lưu local trong `public/images`.
+Các mục Vocabulary, AI Tutor, Mock Test, Pro chưa có logic được ghi unavailable
+thay vì giả lập. Không tuyên bố đã đạt pixel-equivalence 100% từ ảnh tổng hợp.
+
+### Concept trước — Quiet IELTS workspace (2026-10-05)
+
+Ảnh tham chiếu mới nhất thay thế skin indigo dashboard bên dưới: khung bo góc
+trên nền lavender, surface trắng/off-white, primary violet `#6146ee`, chữ
+`#19192f` và viền `#e7e6f1`. Dark theme giữ surface tối và primary sáng.
+Home có silhouette núi SVG nhẹ, launcher mở thư viện theo tên kỹ năng, bốn
+shortcut nhỏ và bố cục Tiếp tục học / Hôm nay tập trung. Sidebar dùng icon nét
+mảnh, chia điều hướng chính, kỹ năng và công cụ; mobile giữ bottom navigation.
+Speaking dùng nút microphone tròn đồng tâm; thao tác ghi âm và consent giữ
+nguyên. Reading và Writing vẫn chia hai vùng trên desktop. Không thêm AI tutor,
+Pro, band hoặc streak giả theo ảnh mẫu. Xem ADR 0012.
+
+### Concept trước — IELTS Learning Hub
+
+Concept mới của người dùng thay thế skin xanh lá và điều hướng ngang trước đó: nền light `#f7f8fc`, indigo `#414bb2`, accent violet, thẻ trắng; dark palette dùng nền `#101421`, surface `#191f30`, chữ sáng và primary `#a5adff`. Semantic token dùng xuyên suốt màn hình cũ và mới. Font stack Geist/Inter/Segoe UI/system, không tải font bên ngoài.
+
+Home tập trung vào bước tiếp theo và bài đang làm, không đổ analytics vào đầu trang. Desktop sidebar phân nhóm luyện tập và công cụ; mobile thanh Home/Practice/Speaking/Tiến độ và Menu truy cập các mục còn lại. Không profile giả, streak giả, điểm band suy ra từ mock. Theme Sáng/Tối/Hệ thống có lưu lựa chọn và fallback khi storage chặn. Writing desktop chia đề/editor, mobile một cột; Reading split pane giữ nguyên. Mock Test và Vocabulary chưa được làm trong checkpoint MVP này.
+
+### Cập nhật giao diện local — 2026-10-04
+
+Theo yêu cầu thiết kế lại, dùng nền sáng ấm và xanh lá làm primary. Điều hướng ngang có icon và nhãn, một khối hướng dẫn ba bước theo kỹ năng, và nút Tập trung thu gọn khối hướng dẫn, giảm độ nổi bật của các mục điều hướng khác. Thông tin lưu trữ được đặt trong disclosure có thể mở bằng bàn phím; consent và cảnh báo liên quan vẫn ở luồng thao tác.
+
+Thiết kế hướng tới giảm tải nhận thức bằng phân nhóm, tạo điểm bắt đầu nhỏ bằng lời dẫn và phản hồi tiến độ bằng dữ liệu thật. Writing có thanh số từ so với mục tiêu gợi ý 250; đây không phải điểm chất lượng hoặc điều kiện nộp mới. Không có streak, thưởng giả hay đếm ngược gây áp lực. Đây là giả thuyết thiết kế cần kiểm chứng khi sử dụng thực tế, không phải cam kết cải thiện tập trung.
+
+Token giao diện: nền `#f6f7f2`, chữ `#21382f`, primary `#226448`, muted `#596b61`, accent `#b65e2c`. CSS chung áp dụng cho cả sáu màn hình; domain, API và storage contracts giữ nguyên. Nội dung tiếng Anh dài dùng serif, UI dùng system sans; không tải font bên ngoài. Tôn trọng reduced motion và giữ focus ring.
+
 MaKeng cần tạo cảm giác tập trung, đáng tin và ít gây áp lực. Giao diện phải giống một không gian học tập chuyên nghiệp, không giống casino hóa bằng streak, badge và animation quá mức.
 
 Ba thuộc tính chính:
@@ -11,6 +82,8 @@ Ba thuộc tính chính:
 - Progress-oriented: nhấn mạnh bước cải thiện tiếp theo, không chỉ điểm số.
 
 ## 2. Nguyên tắc UI
+
+Phản hồi tiếp theo (2026-10-04) thay thế luồng Writing một cột chọn đề + viết trên cùng màn hình: dùng thư viện thẻ đề → màn hình làm bài riêng → xem lại. Thư viện có hero định hướng, thẻ đánh số, metadata loại bài/chủ đề, bộ lọc và tìm kiếm khi hữu ích, chọn ngẫu nhiên và lối quay lại bản nháp. Speaking tách thư viện, thiết lập lượt luyện và lịch sử; nút che câu hỏi giữ chế độ khi chuyển câu. Điều hướng thêm nhãn tiếng Việt dưới tên kỹ năng, phân cách bốn kỹ năng với nhóm công cụ. Bố cục thẻ ba/hai/một cột; dữ liệu Task 1 có bảng semantic, không dùng hình ảnh làm nguồn số liệu duy nhất. Nhịp thị giác phong phú hơn nhưng không có thưởng giả hoặc animation gây phân tâm.
 
 Theo phản hồi sử dụng đầu tiên, giao diện ưu tiên tối giản: thanh điều hướng ngang có Writing, Reading, Tạo đề và Tiến độ; bỏ sidebar, slogan và các khối trang trí. Writing dùng một cột theo thứ tự chọn đề → viết → nộp. Reading có thư viện bài ngắn; trên điện thoại chuyển giữa Bài đọc và Câu hỏi bằng hai nút rõ ràng. Lịch sử đặt cạnh thao tác luyện tập, trạng thái lưu được hiển thị ngay gần câu trả lời.
 
@@ -121,6 +194,15 @@ Phase 3 bổ sung mục điều hướng **Tạo đề** (`/create`), form nhậ
 - Hỗ trợ keyboard navigation cho câu hỏi.
 
 ## 9. Accessibility baseline
+
+Interaction pass: `interactions.css` giữ palette/font/layout hiện tại; hover chỉ
+cho phần tử bấm được (nâng tile 2px, arrow dịch 3px, navigation đổi nền), press
+thu nhẹ nút/thẻ, focus có ring và radio đã chọn có viền rõ. Settings/Notes/voice
+settings mở trong 150–180ms. Không animation lặp, parallax, âm thanh hoặc trì
+hoãn hành động. Hover chuyển động chỉ áp dụng pointer fine; reduced motion bỏ
+transition/animation/transform nhưng giữ feedback bằng màu/viền. Disabled không
+tham gia. Skill frontend-design hướng hiệu ứng vào thao tác, không trang trí mọi
+card; không đổi consent, autosave, audio hoặc điểm.
 
 Phase 4 thêm **Tiến độ** với thẻ số liệu, meter có nhãn và số đúng/tổng câu, bộ lọc thời gian, gợi ý giải thích bằng văn bản và form ôn từng câu sai. Trạng thái Chưa ôn/Đã ôn phân biệt bằng chữ; không dùng màu hoặc band mock làm bằng chứng tiến bộ. Giữ một cột trên mobile, không thêm sidebar. Toggle gợi ý phản hồi ngay và hoàn nguyên nếu lưu thất bại.
 

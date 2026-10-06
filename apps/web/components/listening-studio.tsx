@@ -16,6 +16,7 @@ import {
   type StoredListening,
 } from "../../../packages/demo/listening-store";
 import { sampleListening } from "../../../packages/content/listening";
+import { randomItem } from "../../../packages/domain/catalog";
 import { listeningResult } from "../../../packages/domain/listening";
 import { exportListeningBackup } from "../../../packages/domain/listening-backup";
 
@@ -40,11 +41,31 @@ export default function ListeningStudio() {
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [importing, setImporting] = useState(false);
+  const openedInitial = useRef(false);
   const refresh = useCallback(async () => {
     try {
       const next = await listListening();
       setLessons(next);
       setStorageReady(true);
+      if (!openedInitial.current) {
+        openedInitial.current = true;
+        const query = new URLSearchParams(window.location.search);
+        const id = query.get("lesson");
+        const attemptId = query.get("attempt");
+        if (id) {
+          const lesson = next.find((item) => item.id === id);
+          const attempt = lesson?.attempts.find(
+            (item) => item.id === attemptId,
+          );
+          if (lesson && attempt) {
+            selected.current = lesson.id;
+            setSelection({ lesson, attemptId: attempt.id });
+          } else
+            setNotice(
+              "Bài nghe hoặc lượt luyện không còn trên thiết bị. Hãy chọn bài trong thư viện.",
+            );
+        }
+      }
       if (selected.current && !next.some((l) => l.id === selected.current)) {
         selected.current = null;
         setSelection(null);
@@ -128,7 +149,11 @@ export default function ListeningStudio() {
       </main>
     );
   return (
-    <main id="main" className="listening-page">
+    <main
+      id="main"
+      className="listening-page"
+      data-practice={Boolean(selection)}
+    >
       <h1>Listening</h1>
       <p>
         Nghe, làm bài và nghe lại đoạn chứa đáp án. Bài luyện ngắn độc lập, chưa
@@ -270,6 +295,15 @@ export default function ListeningStudio() {
           )}
           <section aria-labelledby="listening-library">
             <h2 id="listening-library">Thư viện & lịch sử Listening</h2>
+            <button
+              disabled={busy || loading || !storageReady || !lessons.length}
+              onClick={() => {
+                const lesson = randomItem(lessons);
+                if (lesson) void practice(lesson);
+              }}
+            >
+              Chọn bài nghe ngẫu nhiên
+            </button>
             {loading ? (
               <p role="status">Đang đọc dữ liệu trên thiết bị…</p>
             ) : !storageReady ? (

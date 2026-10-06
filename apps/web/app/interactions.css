@@ -1,0 +1,148 @@
+/* Feedback for intentional actions, not looping decoration. */
+:root {
+  --interaction-fast: 130ms;
+  --interaction-ease: cubic-bezier(0.2, 0.7, 0.3, 1);
+  --interaction-glow: color-mix(in srgb, var(--primary) 16%, transparent);
+}
+
+button:not(:disabled),
+.hub-skill,
+a.lumen-continue-card,
+.lumen-focus-row,
+.lumen-sidebar nav a,
+.hub-mobile-nav a,
+.practice-resources {
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    transform var(--interaction-fast) var(--interaction-ease),
+    box-shadow var(--interaction-fast) ease,
+    border-color var(--interaction-fast) ease,
+    background-color var(--interaction-fast) ease,
+    color var(--interaction-fast) ease;
+}
+
+button:not(:disabled):active {
+  transform: translateY(1px) scale(0.97);
+}
+
+.hub-skill:active,
+a.lumen-continue-card:active {
+  transform: scale(0.985);
+}
+
+.lumen-sidebar nav a:active,
+.hub-mobile-nav a:active,
+.lumen-focus-row:active {
+  transform: scale(0.98);
+}
+
+.hub-skill .skill-link svg,
+.continue-cta svg,
+.practice-resources svg {
+  transition: transform var(--interaction-fast) var(--interaction-ease);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .hub-skill:hover:not(:active),
+  a.lumen-continue-card:hover:not(:active) {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 16px var(--interaction-glow);
+    border-color: var(--primary);
+  }
+
+  .hub-skill:hover .skill-link svg,
+  a.lumen-continue-card:hover .continue-cta svg {
+    transform: translateX(3px);
+  }
+
+  .lumen-sidebar nav a:hover,
+  .lumen-settings-link:hover:not(:disabled),
+  .hub-mobile-nav a:hover {
+    background: var(--primary-soft);
+    color: var(--primary);
+  }
+
+  .lumen-focus-row:hover:not(:active) {
+    color: var(--primary);
+    transform: translateX(2px);
+  }
+
+  button.primary:hover:not(:disabled),
+  .record-orb:hover:not(:disabled) {
+    box-shadow: 0 4px 16px var(--interaction-glow);
+  }
+}
+
+:is(button:not(:disabled), a):focus-visible {
+  box-shadow: 0 0 0 4px var(--interaction-glow);
+}
+
+input:not([type="checkbox"]):not([type="radio"]),
+textarea,
+select {
+  transition:
+    border-color var(--interaction-fast) ease,
+    box-shadow var(--interaction-fast) ease;
+}
+
+:is(input, textarea, select):focus-visible {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--interaction-glow);
+}
+
+.questions-pane label:has(input[type="radio"]) {
+  transition:
+    border-color var(--interaction-fast) ease,
+    background-color var(--interaction-fast) ease,
+    box-shadow var(--interaction-fast) ease;
+}
+
+.questions-pane label:has(input[type="radio"]:checked) {
+  border-color: var(--primary);
+  background: var(--primary-soft);
+  box-shadow: inset 0 0 0 1px var(--primary);
+}
+
+@keyframes interaction-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.lumen-settings-panel {
+  animation: interaction-reveal 180ms var(--interaction-ease) both;
+}
+
+.voice-settings[open] > :not(summary),
+.reading-notes {
+  animation: interaction-reveal 150ms var(--interaction-ease) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+
+  button:not(:disabled):active,
+  .hub-skill:hover,
+  .hub-skill:active,
+  a.lumen-continue-card:hover,
+  a.lumen-continue-card:active,
+  .lumen-sidebar nav a:active,
+  .hub-mobile-nav a:active,
+  .lumen-focus-row:hover,
+  .lumen-focus-row:active,
+  .hub-skill:hover .skill-link svg,
+  a.lumen-continue-card:hover .continue-cta svg {
+    transform: none !important;
+  }
+}

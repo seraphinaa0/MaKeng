@@ -40,18 +40,18 @@ Beta sử dụng modular monolith. Web, API và worker có thể nằm trong cù
 
 ## 3. Stack mặc định
 
-| Thành phần | Lựa chọn |
-|---|---|
-| Web | Next.js, TypeScript |
-| UI | Tailwind CSS, component primitives có accessibility |
-| Validation | Zod |
-| Database | PostgreSQL qua Supabase |
-| Auth | Supabase Auth |
-| Storage | Supabase Storage, private bucket |
-| Jobs ban đầu | `generation_jobs` trong PostgreSQL + worker |
-| AI | Provider adapter tương thích structured output |
-| Tests | Vitest, Testing Library, Playwright |
-| Package manager | pnpm |
+| Thành phần      | Lựa chọn                                            |
+| --------------- | --------------------------------------------------- |
+| Web             | Next.js, TypeScript                                 |
+| UI              | Tailwind CSS, component primitives có accessibility |
+| Validation      | Zod                                                 |
+| Database        | PostgreSQL qua Supabase                             |
+| Auth            | Supabase Auth                                       |
+| Storage         | Supabase Storage, private bucket                    |
+| Jobs ban đầu    | `generation_jobs` trong PostgreSQL + worker         |
+| AI              | Provider adapter tương thích structured output      |
+| Tests           | Vitest, Testing Library, Playwright                 |
+| Package manager | pnpm                                                |
 
 Redis/BullMQ chỉ được thêm khi PostgreSQL job queue không đáp ứng tải hoặc yêu cầu scheduling/retry.
 
@@ -204,6 +204,22 @@ POST /api/v1/attempts/:id/submit
 - Migration chạy có kiểm soát, không tự động destructive.
 
 ## 12. Quy tắc thay đổi kiến trúc
+
+ADR 0016 thêm UI preferences riêng `makeng-personal-v1`, giữ key theme cũ và
+hai lựa chọn thiết bị `makeng-audio-input/output`. Không migration dữ liệu học
+hay đưa tùy chọn này vào backup. `/settings` chỉ đọc quyền, nhận diện thiết bị
+sau action và luôn stop tracks; microphone được chọn chỉ áp dụng lần ghi âm
+tiếp theo. Media output dùng capability `setSinkId`, TTS vẫn dùng đầu ra hệ
+thống. Motion dùng CSS/SVG/Web Animations và Next navigation, không provider
+mới hoặc thư viện animation.
+
+ADR 0011 thêm manifest nguồn `packages/content/open-starter.json` được validate bằng Zod và `/sources` với audio VOA local. Không đổi schema Reading/Listening hay backup dữ liệu học; third-party text không gắn provenance `user-authored`/`original-synthetic`, không đưa vào runtime có điểm trước review.
+
+ADR 0010 bổ sung shell Home/Practice/Writing và theme UI riêng, không migration dữ liệu luyện tập. Query Writing cũ tại root vẫn được đọc. Home tổng hợp read-only progress và audio store; mỗi nguồn lỗi báo riêng. Resume Listening/Speaking dùng deep link ID đã lưu, không tạo lượt mới khi mở dashboard.
+
+ADR 0009 bổ sung Speaking set ID mở rộng (tương thích phiên cũ) và browser Task 1 với evaluation/overall null, được backup validator kiểm tra theo tiền tố đề. Toàn bộ số liệu nằm trong prompt để snapshot/export không phụ thuộc UI catalog. SQLite/worker Task 2 giữ nguyên. SpeechSynthesis chỉ dùng giọng local English, không thêm provider hoặc dependency.
+
+Checkpoint local backup bổ sung `/backup`, restore browser state qua Web Lock hiện có, và Speaking envelope gồm audio/checksum. Speaking giữ fingerprint khôi phục tùy chọn trong IndexedDB để chặn snapshot trùng; domain metadata vẫn schema v1. Khôi phục Speaking dùng lock demo để xóa toàn bộ chờ commit rồi xóa bản vừa khôi phục. Mỗi nhóm atomic trong store của nó; không có transaction chung. Xem [ADR 0008](docs/decisions/0008-local-backup-and-restore.md).
 
 Phase 4 demo dùng domain analytics thuần tính từ snapshot bài đã nộp; chỉ preferences và trạng thái ôn được persist thêm trong browser state v2. Xem [ADR 0004](docs/decisions/0004-learning-loop.md). Không có dịch vụ analytics hoặc AI call mới.
 

@@ -6,6 +6,8 @@ export default ts.config(
       "**/.next/**",
       "**/next-env.d.ts",
       "node_modules/**",
+      ".corepack/**",
+      ".data/**",
       "test-results/**",
       "playwright-report/**",
     ],

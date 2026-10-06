@@ -12,7 +12,10 @@ export const speakingQuestionSchema = z
   .strict();
 export const speakingSetSchema = z
   .object({
-    id: z.literal("everyday-learning"),
+    id: z
+      .string()
+      .regex(/^[a-z0-9-]+$/)
+      .max(100),
     version: z.literal(1),
     title: z.string().min(1).max(200),
     provenance: z.literal("original-project-preview"),

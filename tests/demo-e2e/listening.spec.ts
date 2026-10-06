@@ -347,7 +347,7 @@ test("global delete fails explicitly when audio storage is blocked, preserving W
   page,
 }) => {
   await start(page);
-  await page.goto("/");
+  await page.goto("/?practice=1");
   await page
     .getByLabel("Bài viết bằng tiếng Anh")
     .fill(
@@ -382,7 +382,7 @@ test("global demo deletion also clears Listening and active audio in another tab
   const other = await context.newPage();
   await other.goto("/listening");
   await other.getByRole("button", { name: "Tiếp tục bài nghe" }).click();
-  await page.goto("/");
+  await page.goto("/?practice=1");
   await page.getByRole("button", { name: "Lịch sử bài viết" }).click();
   await page.getByRole("button", { name: "Xóa dữ liệu phiên này" }).click();
   await page.getByRole("button", { name: "Xác nhận xóa" }).click();

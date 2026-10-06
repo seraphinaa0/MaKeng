@@ -36,4 +36,20 @@ export const prompts = [
     text: "More employers are allowing staff to choose when they start and finish their working day. Do the advantages of this development outweigh the disadvantages?",
     provenance: "MaKeng original synthetic prompt • v1",
   },
+  {
+    id: "digital-inclusion",
+    topic: "Technology & society",
+    title: "Digital services for everyone",
+    text: "As more public services move online, some people argue that governments should provide free digital skills training for adults. Others believe maintaining face-to-face services is more important. Discuss both views and give your own opinion.",
+    provenance:
+      "MaKeng original synthetic prompt • v1 • 2026-10-05 • unreviewed preview",
+  },
+  {
+    id: "repair-culture",
+    topic: "Environment & consumption",
+    title: "Repair or replace?",
+    text: "Many households replace damaged products instead of repairing them. What are the reasons for this trend, and what could communities do to encourage people to repair more items?",
+    provenance:
+      "MaKeng original synthetic prompt • v1 • 2026-10-05 • unreviewed preview",
+  },
 ];

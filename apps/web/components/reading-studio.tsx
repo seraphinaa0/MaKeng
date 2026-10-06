@@ -8,6 +8,7 @@ import type {
 import { api } from "./api";
 import ReadingPlayer from "./reading-player";
 import Link from "next/link";
+import { randomItem } from "../../../packages/domain/catalog";
 import { typeLabels } from "../../../packages/domain/reading";
 
 export default function ReadingStudio() {
@@ -102,7 +103,7 @@ export default function ReadingStudio() {
     void loadHistory().catch(() => setError("Không tải được lịch sử."));
   }
   return (
-    <main id="main" className="reading-page">
+    <main id="main" className="reading-page" data-practice={Boolean(attempt)}>
       <div className="page-heading">
         <h1>Reading</h1>
         <p>Đọc bài, trả lời câu hỏi và xem giải thích sau khi nộp.</p>
@@ -137,6 +138,7 @@ export default function ReadingStudio() {
           sessionId={sessionId}
           onSubmitted={select}
           onReload={() => open(attempt.id)}
+          onHistory={() => navigate("history")}
         />
       ) : view === "history" ? (
         <>
@@ -191,10 +193,36 @@ export default function ReadingStudio() {
             Bài tự duyệt trên thiết bị và 5 bài mẫu thử nghiệm chưa được giáo
             viên duyệt. Không phải đề IELTS chính thức.
           </p>
+          <div className="catalog-hero">
+            <div>
+              <p className="eyebrow">ĐỌC HIỂU · TÌM DẪN CHỨNG</p>
+              <h2>Chọn bài đọc, mở một góc nhìn.</h2>
+              <p>
+                {sets.length} bài đang có · Mở bài để trả lời, xem đáp án sau
+                khi nộp.
+              </p>
+              <button
+                className="primary"
+                disabled={busy || !sets.length}
+                onClick={() => {
+                  const set = randomItem(sets);
+                  if (set) void start(set.id);
+                }}
+              >
+                Chọn đề ngẫu nhiên
+              </button>
+            </div>
+            <span className="catalog-emblem" aria-hidden="true">
+              R<span>READ & DISCOVER</span>
+            </span>
+          </div>
           <div className="library">
-            {sets.map((set) => (
+            {sets.map((set, index) => (
               <article className="card library-card" key={set.id}>
                 <div>
+                  <div className="library-number">
+                    BÀI LUYỆN {String(index + 1).padStart(2, "0")}
+                  </div>
                   <h2>{set.title}</h2>
                   <p>
                     {set.questions.length} câu · {set.minutes} phút gợi ý

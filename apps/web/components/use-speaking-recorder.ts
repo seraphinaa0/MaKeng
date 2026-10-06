@@ -1,6 +1,7 @@
 "use client";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { SPEAKING_AUDIO_LIMIT } from "../../../packages/schemas/speaking";
+import { preferredMicrophone } from "./audio-preferences";
 
 export function useSpeakingRecorder(limitSeconds: number) {
   const [phase, setPhase] = useState<
@@ -86,7 +87,7 @@ export function useSpeakingRecorder(limitSeconds: number) {
           "Trình duyệt chưa hỗ trợ định dạng ghi âm. Hãy thử Chrome, Edge hoặc Safari mới.",
         );
       const media = await navigator.mediaDevices.getUserMedia({
-        audio: true,
+        audio: preferredMicrophone(),
         video: false,
       });
       if (token !== generation.current || document.hidden) {
@@ -159,9 +160,13 @@ export function useSpeakingRecorder(limitSeconds: number) {
           ? "Quyền microphone bị từ chối. Cho phép microphone trong cài đặt trang web rồi thử lại, hoặc nhập transcript."
           : cause instanceof DOMException && cause.name === "NotFoundError"
             ? "Không tìm thấy microphone. Kết nối thiết bị hoặc nhập transcript."
-            : cause instanceof Error
-              ? cause.message
-              : "Không thể ghi âm.",
+            : cause instanceof DOMException &&
+                cause.name === "OverconstrainedError"
+              ? "Microphone đã chọn không còn khả dụng. Mở Settings, chọn lại thiết bị hoặc Mặc định hệ thống rồi thử lại."
+              : cause instanceof Error
+                ? cause.message ||
+                  "Không thể ghi âm. Kiểm tra microphone trong Settings rồi thử lại."
+                : "Không thể ghi âm.",
       );
     }
   }

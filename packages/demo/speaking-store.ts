@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { prepareSpeakingRestore } from "../domain/speaking-backup";
 import {
   speakingSessionSchema,
   type SpeakingSession,
@@ -15,13 +16,20 @@ export const SPEAKING_CHANNEL = "makeng-speaking-changes";
 export const SPEAKING_TAB = crypto.randomUUID();
 export interface StoredSpeaking extends SpeakingSession {
   blobs: Record<string, Blob>;
+  backupKey?: string;
 }
 function checked(value: unknown): StoredSpeaking {
   const raw = z
-    .object({ blobs: z.record(z.string(), z.instanceof(Blob)) })
+    .object({
+      blobs: z.record(z.string(), z.instanceof(Blob)),
+      backupKey: z
+        .string()
+        .regex(/^[a-f0-9]{64}$/)
+        .optional(),
+    })
     .passthrough()
     .parse(value);
-  const { blobs, ...metadata } = raw;
+  const { blobs, backupKey, ...metadata } = raw;
   const session = speakingSessionSchema.parse(metadata);
   if (
     Object.keys(blobs).some((id) => !session.responses[id]?.recording) ||
@@ -34,7 +42,7 @@ function checked(value: unknown): StoredSpeaking {
     )
   )
     throw new Error("Audio Speaking bị hỏng. Không ghi đè dữ liệu.");
-  return { ...session, blobs };
+  return { ...session, blobs, ...(backupKey ? { backupKey } : {}) };
 }
 function notify() {
   if (typeof BroadcastChannel === "undefined") return;
@@ -161,13 +169,18 @@ function capacity(sessions: StoredSpeaking[]) {
       "Giới hạn 20 phiên / 100 MiB audio. Xuất và xóa phiên cũ trước.",
     );
 }
-export async function addSpeaking(days: 1 | 7 | 30, consent: boolean) {
+export async function addSpeaking(
+  days: 1 | 7 | 30,
+  consent: boolean,
+  set?: StoredSpeaking["set"],
+) {
   const session = checked({
     ...newSpeaking(
       crypto.randomUUID(),
       new Date().toISOString(),
       days,
       consent,
+      set,
     ),
     blobs: {},
   });
@@ -221,7 +234,7 @@ export function saveSpeaking(
   complete = false,
 ) {
   return mutate(id, (session) => {
-    const { blobs: storedBlobs, ...metadata } = session;
+    const { blobs: storedBlobs, backupKey, ...metadata } = session;
     const next = changeSpeaking(
       metadata,
       revision,
@@ -233,7 +246,7 @@ export function saveSpeaking(
     const blobs = { ...storedBlobs };
     if (blob) blobs[questionId] = blob;
     else delete blobs[questionId];
-    return { ...next, blobs };
+    return { ...next, blobs, ...(backupKey ? { backupKey } : {}) };
   });
 }
 export function deleteSpeakingAudio(
@@ -242,10 +255,14 @@ export function deleteSpeakingAudio(
   questionId: string,
 ) {
   return mutate(id, (session) => {
-    const { blobs: storedBlobs, ...metadata } = session;
+    const { blobs: storedBlobs, backupKey, ...metadata } = session;
     const blobs = { ...storedBlobs };
     delete blobs[questionId];
-    return { ...removeSpeakingAudio(metadata, revision, questionId), blobs };
+    return {
+      ...removeSpeakingAudio(metadata, revision, questionId),
+      blobs,
+      ...(backupKey ? { backupKey } : {}),
+    };
   });
 }
 export async function deleteSpeaking(id: string) {
@@ -261,4 +278,36 @@ export async function clearSpeaking() {
     done();
   });
   notify();
+}
+
+export async function restoreSpeaking(
+  text: string,
+  days: 1 | 7 | 30,
+  consent: boolean,
+) {
+  if (!navigator.locks)
+    throw new Error("Khôi phục cần trình duyệt hỗ trợ Web Locks.");
+  const { DEMO_KEY } = await import("./store");
+  return navigator.locks.request(DEMO_KEY, async () => {
+    const restored = checked(await prepareSpeakingRestore(text, days, consent));
+    const result = await transaction<StoredSpeaking>((store, done, fail) =>
+      readAll(store, fail, (values) => {
+        const active = values.filter(
+          (s) => Date.parse(s.expiresAt) > Date.now(),
+        );
+        if (active.some((s) => s.backupKey === restored.backupKey))
+          throw new Error(
+            "Bản sao lưu Speaking này đã được khôi phục; không thêm bản trùng.",
+          );
+        capacity([...active, restored]);
+        values
+          .filter((s) => Date.parse(s.expiresAt) <= Date.now())
+          .forEach((s) => store.delete(s.id));
+        store.add(restored);
+        done(restored);
+      }),
+    );
+    notify();
+    return result;
+  });
 }

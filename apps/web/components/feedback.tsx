@@ -13,7 +13,12 @@ export default function Feedback({ item }: { item: Submission }) {
           <p className="eyebrow">YOUR NEXT STEP</p>
           <h2 id="feedback-title">Hiểu bài viết, tiến thêm một bước.</h2>
         </div>
-        <div className="band">
+        <div
+          className="band lumen-result-gauge"
+          style={{
+            background: `conic-gradient(#36b8b1 ${((item.overall ?? 0) / 9) * 270}deg, var(--border) 0deg)`,
+          }}
+        >
           <strong>{item.overall?.toFixed(1)}</strong>
           <span>
             Band minh họa

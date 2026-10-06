@@ -31,6 +31,16 @@ Giá trị khác biệt không phải là “gọi AI để sinh đề”, mà l
 
 ## 4. Phạm vi beta
 
+UI local theo yêu cầu expressive motion: launcher Home có gợi ý đổi sau hai
+giây, skill icon hoạt hình và chuyển trang tùy chỉnh. Avatar quản lý tên/avatar
+cục bộ, theme Ambient và Pomodoro; Settings riêng quản lý quyền, thiết bị âm
+thanh và lối vào backup. Đây là cá nhân hóa browser, không phải tài khoản,
+đồng bộ hoặc dữ liệu band. Reduced motion vẫn có ưu tiên. Xem ADR 0016.
+
+Gói tài liệu nguồn theo yêu cầu ngày 2026-10-05: `/sources` đọc/nghe trích đoạn VOA, Wikipedia CC BY-SA và tác phẩm public domain, có attribution/điều kiện và audio VOA local. Đây là source-only, không tự publish câu hỏi. Speaking/Task 2/Task 1 thêm preview gốc. Common Voice/LibriVox chưa nhập; xem ADR 0011.
+
+MVP Learning Hub local theo concept mới: Home dùng bài đang làm và gợi ý domain hiện có để chỉ bước tiếp theo; `/practice` là cửa vào bốn kỹ năng; `/writing` là thư viện/luồng viết. Số liệu hoạt động không phải band IELTS; AI thật, Vocabulary tự động và Mock Test đầy đủ là checkpoint sau, chưa có nút giả trong UI. Xem ADR 0010.
+
 **Giai đoạn hiện tại: phát triển web local cho sử dụng cá nhân, chưa public.** Bản trình duyệt đã có Writing/Reading, Tạo đề, Tiến độ và Listening/Speaking với giới hạn mock/manual được mô tả trong README. Không yêu cầu đăng nhập, Supabase, usage công khai hay native app để tiếp tục công việc này. Các tiêu chí beta nhiều người dùng bên dưới là mục tiêu tương lai; xem [ADR 0007](docs/decisions/0007-local-only-development.md).
 
 Beta gồm hai vertical slice:
@@ -53,6 +63,10 @@ Beta gồm hai vertical slice:
 - Không có nội dung AI nào được tự động publish trong beta.
 
 ## 5. Ngoài phạm vi beta
+
+### Bổ sung cho web local theo phản hồi UI
+
+Thư viện chọn đề tách khỏi màn hình làm bài. Có chọn ngẫu nhiên trong danh sách hiện tại; Writing có tìm chủ đề và lọc Task 1/Task 2. Academic Task 1 có hai bảng số liệu gốc, bản nháp/lịch sử/sao lưu và hướng dẫn tự kiểm tra, chưa chấm điểm. Speaking có ba bộ đề, che chữ và đọc câu hỏi bằng giọng English local của hệ điều hành; không dùng dịch vụ TTS bên ngoài. TTS tự động tạo Listening vẫn ngoài phạm vi. Xem ADR 0009.
 
 - Speaking examiner hoàn chỉnh.
 - Listening generation và TTS tự động.

@@ -2,6 +2,7 @@ import { z } from "zod";
 import { localPreviewSets } from "../content/reading";
 import { MockWritingEvaluator } from "../ai/writing";
 import { prompts, aggregateBand } from "../domain/writing";
+import { isTaskOne } from "../content/writing-task-one";
 import { newDraft, reviewDraft } from "../domain/authoring";
 import { ApiError } from "../domain/errors";
 import { publicReadingSet, scoreReading } from "../domain/reading";
@@ -40,8 +41,8 @@ const storedSubmission = z.object({
   status: z.literal("completed"),
   attempts: z.literal(1),
   errorCode: z.null(),
-  evaluation: evaluationSchema,
-  overall: z.number(),
+  evaluation: evaluationSchema.nullable(),
+  overall: z.number().nullable(),
   key: z.uuid(),
 });
 const legacyStateSchema = z
@@ -60,6 +61,78 @@ const stateSchema = legacyStateSchema.extend({
 });
 type State = z.infer<typeof stateSchema>;
 type StoredAttempt = z.infer<typeof storedAttempt>;
+export const DEMO_BACKUP_LIMIT = 10 * 1024 * 1024;
+export function parseDemoBackup(text: string): State {
+  if (new TextEncoder().encode(text).byteLength > DEMO_BACKUP_LIMIT)
+    throw new Error("Bản sao lưu Writing/Reading tối đa 10 MiB.");
+  const raw: unknown = JSON.parse(text);
+  const legacy = legacyStateSchema.safeParse(raw);
+  const state = legacy.success
+    ? { ...legacy.data, version: 2 as const, learning: newLearningState() }
+    : stateSchema.parse(raw);
+  const unique = (ids: string[]) => {
+    if (new Set(ids).size !== ids.length)
+      throw new Error("Bản sao lưu có mã dữ liệu trùng.");
+  };
+  unique(state.writing.map((w) => w.id));
+  unique(state.writing.map((w) => w.key));
+  unique(state.attempts.map((a) => a.id));
+  unique(state.drafts.map((d) => d.id));
+  unique(state.published.map((s) => `${s.id}:${s.version}`));
+  if (state.drafts.length > 50) throw new Error("Tối đa 50 bản nháp tạo đề.");
+  for (const w of state.writing) {
+    submissionInput.parse({ prompt: w.prompt, essay: w.essay, consent: true });
+    if (isTaskOne(w.prompt)) {
+      if (w.evaluation !== null || w.overall !== null)
+        throw new Error("Task 1 chưa có chấm điểm.");
+      continue;
+    }
+    const evaluation = validateEvaluation(w.evaluation, w.essay);
+    if (w.overall !== aggregateBand(evaluation))
+      throw new Error("Điểm Writing không khớp phản hồi.");
+  }
+  for (const a of state.attempts) {
+    const ids = a.content.questions.map((q) => q.id);
+    if (
+      (a.status === "submitted") !== (a.submittedAt !== null) ||
+      (a.submittedAt && Date.parse(a.submittedAt) < Date.parse(a.createdAt)) ||
+      [...Object.keys(a.answers), ...a.flagged].some((id) => !ids.includes(id))
+    )
+      throw new Error("Lịch sử Reading không hợp lệ.");
+    for (const q of a.content.questions) {
+      const answer = a.answers[q.id];
+      if (
+        answer &&
+        ((q.type === "mcq" && !q.options.some((o) => o.id === answer)) ||
+          (q.type === "tfng" &&
+            !["TRUE", "FALSE", "NOT GIVEN"].includes(answer)))
+      )
+        throw new Error("Lựa chọn Reading không hợp lệ.");
+    }
+  }
+  if (
+    state.published.some((s) => s.publication !== "published") ||
+    state.drafts.some(
+      (d) => (d.status === "published") !== (d.set.publication === "published"),
+    )
+  )
+    throw new Error("Trạng thái phát hành không hợp lệ.");
+  for (const key of Object.keys(state.learning.reviews)) {
+    const attempt = state.attempts.find(
+      (a) =>
+        a.status === "submitted" &&
+        a.content.questions.some((q) => key === `${a.id}:${q.id}`),
+    );
+    if (
+      !attempt ||
+      !scoreReading(attempt.content, attempt.answers).questions.some(
+        (q) => key === `${attempt.id}:${q.questionId}` && !q.correct,
+      )
+    )
+      throw new Error("Trạng thái ôn lỗi không khớp lịch sử Reading.");
+  }
+  return state;
+}
 function fresh(): State {
   return {
     version: 2,
@@ -188,6 +261,72 @@ export class DemoStore {
     if (route === "session" && method === "GET")
       return save({ mode: "mock", sessionId: state.sessionId, prompts });
     if (route === "demo/export" && method === "GET") return state;
+    if (route === "demo/restore" && method === "POST") {
+      const input = z
+        .object({ text: z.string(), consent: z.literal(true) })
+        .strict()
+        .parse(body());
+      const backup = parseDemoBackup(input.text);
+      const newWriting = backup.writing.filter(
+        (w) =>
+          !state.writing.some(
+            (current) => current.id === w.id || current.key === w.key,
+          ),
+      );
+      const newAttempts = backup.attempts.filter(
+        (a) => !state.attempts.some((current) => current.id === a.id),
+      );
+      const newDrafts = backup.drafts.filter(
+        (d) => !state.drafts.some((current) => current.id === d.id),
+      );
+      const newPublished = backup.published.filter(
+        (s) =>
+          !state.published.some(
+            (current) => current.id === s.id && current.version === s.version,
+          ),
+      );
+      if (state.drafts.length + newDrafts.length > 50)
+        throw new Error(
+          "Khôi phục vượt giới hạn 50 bản nháp; dữ liệu chưa thay đổi.",
+        );
+      const empty =
+        !state.writing.length &&
+        !state.attempts.length &&
+        !state.drafts.length &&
+        !state.published.length;
+      state.writing.push(...newWriting);
+      state.attempts.push(...newAttempts);
+      state.drafts.push(...newDrafts);
+      state.published.push(...newPublished);
+      state.writing.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+      state.attempts.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+      if (empty && state.learning.revision === 0)
+        state.learning = {
+          ...backup.learning,
+          revision: state.learning.revision + 1,
+        };
+      else {
+        for (const [key, review] of Object.entries(backup.learning.reviews))
+          if (newAttempts.some((a) => key.startsWith(`${a.id}:`)))
+            state.learning.reviews[key] = review;
+        state.learning.revision++;
+      }
+      return save({
+        writing: newWriting.length,
+        reading: newAttempts.length,
+        drafts: newDrafts.length,
+        published: newPublished.length,
+        skipped:
+          backup.writing.length +
+          backup.attempts.length +
+          backup.drafts.length +
+          backup.published.length -
+          newWriting.length -
+          newAttempts.length -
+          newDrafts.length -
+          newPublished.length,
+      });
+    }
     if (route === "learning/progress" && method === "GET")
       return buildProgress(
         state.attempts,
@@ -387,11 +526,17 @@ export class DemoStore {
           );
         return existing;
       }
-      const result = await new MockWritingEvaluator().evaluate(
-        input,
-        new AbortController().signal,
-      );
-      const evaluation = validateEvaluation(result.output, input.essay);
+      const evaluation = isTaskOne(input.prompt)
+        ? null
+        : validateEvaluation(
+            (
+              await new MockWritingEvaluator().evaluate(
+                input,
+                new AbortController().signal,
+              )
+            ).output,
+            input.essay,
+          );
       const item: z.infer<typeof storedSubmission> = {
         id: crypto.randomUUID(),
         key,
@@ -402,7 +547,7 @@ export class DemoStore {
         attempts: 1,
         errorCode: null,
         evaluation,
-        overall: aggregateBand(evaluation),
+        overall: evaluation ? aggregateBand(evaluation) : null,
       };
       state.writing.unshift(item);
       return save(item);

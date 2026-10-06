@@ -1,0 +1,774 @@
+/* Quiet workspace skin. Shared semantics also cover local authoring and sources. */
+:root {
+  --bg: #f8f8fc;
+  --surface: #ffffff;
+  --surface-muted: #f5f4fb;
+  --text: #19192f;
+  --muted: #64667d;
+  --border: #e7e6f1;
+  --primary: #6146ee;
+  --primary-soft: #f0edff;
+  --accent: #745cf2;
+  --evidence: #f0edff;
+  --shadow: 0 5px 24px #38326005;
+  --outside: #c4c8d7;
+  --mountain: #c9d3ee;
+}
+:root[data-theme="dark"] {
+  --bg: #131319;
+  --surface: #1c1c25;
+  --surface-muted: #242330;
+  --text: #f3f1fc;
+  --muted: #b5b2c6;
+  --border: #353341;
+  --primary: #b5a6ff;
+  --primary-soft: #302745;
+  --primary-contrast: #171023;
+  --accent: #b5a6ff;
+  --evidence: #302745;
+  --outside: #09090f;
+  --mountain: #3b355b;
+  --shadow: none;
+}
+body {
+  background: var(--outside);
+  padding-top: 92px;
+  line-height: 1.55;
+  position: relative;
+  isolation: isolate;
+  min-height: 100vh;
+}
+body::before {
+  content: "";
+  position: absolute;
+  inset: 16px;
+  z-index: -1;
+  border: 1px solid var(--border);
+  border-radius: 22px;
+  background:
+    radial-gradient(ellipse at 70% 0%, var(--primary-soft), transparent 48%),
+    var(--bg);
+  pointer-events: none;
+}
+.hub-header.app-header {
+  inset: 17px 17px auto;
+  height: 74px;
+  padding: 14px 26px;
+  border-radius: 21px 21px 0 0;
+  border-bottom: 0;
+  background: var(--bg);
+}
+.hub-header .brand {
+  font-size: 23px;
+  gap: 12px;
+}
+.brand-symbol {
+  background: linear-gradient(135deg, #8d78ff, #5d3eff);
+  color: white;
+  width: 36px;
+  height: 36px;
+  font-size: 17px;
+  border-radius: 13px;
+}
+.hub-header .brand small {
+  font-size: 10px;
+  letter-spacing: 0.15px;
+  font-weight: 400;
+}
+.hub-header-actions {
+  gap: 12px;
+}
+.theme-control select,
+.focus-toggle {
+  border-radius: 12px;
+  font-size: 12px;
+}
+.hub-sidebar {
+  top: 91px;
+  left: 17px;
+  bottom: 17px;
+  width: 216px;
+  padding: 10px 12px 18px;
+  border-radius: 0 0 0 21px;
+  background: var(--bg);
+}
+.hub-header .hub-sidebar nav a {
+  min-height: 43px;
+  padding: 9px 13px;
+  gap: 13px;
+  font-size: 13px;
+}
+.hub-header .hub-sidebar nav a svg {
+  width: 18px;
+  height: 18px;
+}
+.nav-translation {
+  display: none;
+}
+.sidebar-label {
+  font-size: 9px;
+  letter-spacing: 1.1px;
+  margin: 18px 13px 9px;
+}
+.sidebar-note {
+  border: 1px solid var(--border);
+  border-radius: 15px;
+  padding: 16px;
+  margin: 24px 0 0;
+  background: linear-gradient(145deg, var(--primary-soft), var(--bg));
+}
+.sidebar-note p {
+  color: var(--text);
+  font-weight: 550;
+  margin: 8px 0;
+}
+body main#main,
+body > .learning-guide,
+body > .demo-banner,
+body > .theme-error {
+  margin-left: 266px;
+  margin-right: 48px;
+}
+body main#main {
+  padding: 26px 0 48px;
+}
+.learning-guide {
+  margin-top: 8px;
+  font-size: 11px;
+}
+.demo-banner {
+  font-size: 10px;
+}
+.page-heading h1 {
+  font-size: clamp(26px, 2.5vw, 34px);
+  letter-spacing: -0.8px;
+}
+.page-heading p {
+  font-size: 14px;
+}
+button,
+input,
+select,
+textarea {
+  border-radius: 11px;
+}
+button {
+  transition:
+    background 0.15s,
+    box-shadow 0.15s;
+}
+button.primary,
+.hub-primary-link {
+  color: white;
+  background: linear-gradient(135deg, #8266ff, #5b3cf6);
+  border-color: #7358f3;
+  box-shadow:
+    inset 0 1px 0 #ffffff35,
+    0 4px 10px #6548ef17;
+}
+button.primary:hover:not(:disabled),
+.hub-primary-link:hover {
+  background: linear-gradient(135deg, #7358f3, #5031e6);
+  filter: none;
+}
+button:disabled {
+  opacity: 0.55;
+}
+:focus-visible {
+  outline: 3px solid var(--primary);
+  outline-offset: 3px;
+}
+.card,
+.catalog-card,
+.library-card,
+.history-item,
+.criterion,
+.questions-pane,
+.passage-pane {
+  border-radius: 17px;
+}
+.catalog-hero {
+  background: linear-gradient(120deg, var(--surface), var(--primary-soft));
+  border-radius: 18px;
+}
+.catalog-card {
+  padding: 24px;
+}
+.catalog-card button {
+  border-radius: 10px;
+}
+.catalog-index {
+  font-size: 13px;
+}
+.skill-glyph svg {
+  width: 22px;
+  height: 22px;
+}
+.skill-glyph {
+  border-radius: 12px;
+  background: var(--primary-soft);
+}
+.hub-skill[href="/reading"] .skill-glyph {
+  color: #a95d08;
+  background: #fff3df;
+}
+.hub-skill[href="/listening"] .skill-glyph {
+  color: #087e7c;
+  background: #e1f6f3;
+}
+.hub-skill[href="/speaking"] .skill-glyph {
+  color: #6146ee;
+  background: #eeebff;
+}
+.hub-skill[href="/writing"] .skill-glyph {
+  color: #ba3568;
+  background: #fff0f5;
+}
+.workspace-welcome {
+  position: relative;
+  isolation: isolate;
+  padding: 12px 0 22px;
+}
+.welcome-landscape {
+  position: absolute;
+  right: -16px;
+  top: 0;
+  width: 75%;
+  height: 230px;
+  color: var(--mountain);
+  z-index: -1;
+  pointer-events: none;
+  mask-image: linear-gradient(to right, transparent, black 55%);
+}
+.hub-heading {
+  align-items: start;
+  gap: 16px;
+}
+.hub-heading h1 {
+  font-size: clamp(27px, 2.6vw, 38px);
+  margin: 10px 0 8px;
+  letter-spacing: -0.9px;
+}
+.hub-heading .welcome-greeting {
+  color: var(--text);
+  font-size: 16px;
+  font-weight: 550;
+  margin: 0;
+}
+.welcome-greeting span {
+  color: var(--primary);
+}
+.hub-heading p {
+  color: var(--muted);
+  margin-top: 0;
+}
+.hub-quiet-link {
+  margin-top: 6px;
+  font-size: 12px;
+}
+.workspace-launcher {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 9px 10px 9px 19px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 15px;
+  box-shadow: var(--shadow);
+  margin-top: 22px;
+}
+.workspace-launcher input:not([type="radio"]):not([type="checkbox"]) {
+  min-width: 0;
+  flex: 1;
+  width: 100%;
+  border: 0;
+  background: transparent;
+  padding: 9px 0;
+  font-size: 14px;
+}
+.workspace-launcher input::placeholder {
+  color: var(--muted);
+}
+.workspace-launcher button {
+  width: 42px;
+  height: 42px;
+  flex-shrink: 0;
+  font-size: 24px;
+  padding: 0;
+}
+.launcher-help {
+  color: var(--muted);
+  font-size: 11px;
+  margin: 8px 3px 16px;
+}
+.workspace-welcome .hub-skills.compact {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.workspace-welcome .hub-skill {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 16px;
+  border-radius: 13px;
+  min-height: 0;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  box-shadow: none;
+  flex: 0 1 auto;
+}
+.workspace-welcome .skill-glyph {
+  width: 28px;
+  height: 28px;
+  margin: 0;
+  display: grid;
+  place-items: center;
+  border-radius: 9px;
+}
+.workspace-welcome .skill-glyph svg {
+  width: 17px;
+  height: 17px;
+}
+.workspace-welcome .hub-skills.compact .skill-name {
+  font-size: 13px;
+  margin: 0;
+  font-weight: 500;
+}
+.workspace-welcome .hub-skill p,
+.workspace-welcome .hub-skill > small,
+.workspace-welcome .skill-name small,
+.workspace-welcome .skill-link {
+  display: none;
+}
+.workspace-learning {
+  display: grid;
+  grid-template-columns: minmax(0, 1.65fr) minmax(0, 1fr);
+  gap: 24px;
+  align-items: start;
+  margin: 6px 0 28px;
+}
+.workspace-continue {
+  order: 1;
+  min-width: 0;
+}
+.hub-next {
+  order: 2;
+  min-width: 0;
+  display: block;
+  margin: 0;
+  padding: 24px;
+  background: var(--surface);
+  border-radius: 17px;
+}
+.hub-next .hub-kicker {
+  font-size: 11px;
+  letter-spacing: 0.6px;
+  margin-bottom: 16px;
+}
+.hub-next h2 {
+  font-size: 18px;
+  letter-spacing: -0.3px;
+  margin: 12px 0;
+}
+.hub-next p {
+  font-size: 13px;
+}
+.hub-next .hub-primary-link {
+  font-size: 12px;
+  padding: 11px 14px;
+  gap: 12px;
+}
+.hub-page .workspace-continue .section-heading {
+  margin: 4px 0 16px;
+}
+.hub-page .section-heading h2 {
+  font-size: 18px;
+}
+.hub-continue {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+.continue-card {
+  padding: 22px;
+  background: var(--surface);
+  border-radius: 17px;
+}
+.continue-card h3 {
+  font-size: 18px;
+  margin: 14px 0 12px;
+}
+.continue-card p {
+  font-size: 12px;
+}
+.continue-card > span {
+  display: inline-block;
+  background: var(--primary-soft);
+  padding: 7px 12px;
+  border-radius: 9px;
+  font-size: 12px;
+}
+.hub-empty {
+  padding: 28px 22px;
+  min-height: 170px;
+  background: var(--surface);
+  border-radius: 17px;
+  border: 1px solid var(--border);
+}
+.hub-empty h3 {
+  font-size: 16px;
+}
+.hub-empty p {
+  font-size: 13px;
+}
+.hub-bottom {
+  grid-template-columns: minmax(0, 1.65fr) minmax(0, 1fr);
+  gap: 24px;
+}
+.hub-bottom .card {
+  padding: 22px;
+}
+.hub-bottom h2 {
+  font-size: 17px;
+}
+.hub-bottom .hub-kicker {
+  font-size: 9px;
+  margin-bottom: 8px;
+}
+.hub-counts {
+  margin: 16px 0;
+  gap: 12px;
+}
+.hub-counts dd {
+  font-size: 23px;
+}
+.hub-counts dt,
+.hub-counts small {
+  font-size: 11px;
+}
+.hub-bottom p,
+.hub-band-note p {
+  font-size: 12px;
+}
+.hub-band-note {
+  padding: 22px;
+  background: var(--surface-muted);
+}
+.hub-band-note a {
+  font-size: 12px;
+}
+.reading-layout {
+  gap: 20px;
+}
+.passage-pane,
+.questions-pane {
+  padding: 28px;
+}
+.passage-pane p {
+  font-family: inherit;
+  font-size: 16px;
+  line-height: 1.85;
+}
+.questions-pane .options {
+  display: grid;
+  gap: 9px;
+}
+.questions-pane .options label {
+  display: flex;
+  align-items: start;
+  gap: 10px;
+  border: 1px solid var(--border);
+  padding: 12px 14px;
+  border-radius: 10px;
+  font-size: 14px;
+  background: var(--surface);
+}
+.questions-pane .options label:has(input:checked) {
+  background: var(--primary-soft);
+  border-color: var(--primary);
+}
+input[type="radio"],
+input[type="checkbox"] {
+  accent-color: var(--primary);
+}
+.question legend {
+  font-size: 15px;
+  line-height: 1.65;
+}
+.reading-submit {
+  border-radius: 14px;
+  box-shadow: var(--shadow);
+}
+.writing-workspace {
+  background: var(--surface);
+  border-color: var(--border);
+  border-radius: 18px;
+}
+.writing-question-pane {
+  background: linear-gradient(
+    155deg,
+    var(--surface-muted),
+    var(--primary-soft)
+  );
+  border-radius: 13px;
+  padding: 22px;
+}
+.writing-editor-pane {
+  border: 1px solid var(--border);
+  border-radius: 13px;
+  padding: 22px;
+}
+.writing-editor-pane .essay-input {
+  min-height: 440px;
+  background: var(--surface);
+  font-size: 16px;
+  line-height: 1.85;
+}
+.speaking-prompt {
+  background:
+    radial-gradient(ellipse at 80% 90%, var(--primary-soft), transparent 70%),
+    var(--surface);
+}
+.speaking-prompt h2 {
+  font-size: 23px;
+  line-height: 1.5;
+}
+.speech-controls {
+  border-radius: 12px;
+  padding: 12px;
+  font-size: 12px;
+  background: var(--surface);
+}
+.speaking-prompt .recording-actions {
+  justify-content: center;
+  gap: 20px;
+  padding: 38px 0 20px;
+}
+button.primary.record-orb {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  font-size: 12px;
+  box-shadow:
+    0 0 0 9px var(--primary-soft),
+    0 0 0 20px color-mix(in srgb, var(--primary-soft) 55%, transparent);
+}
+.record-orb svg {
+  width: 32px;
+  height: 32px;
+}
+.recording-actions[data-recording="true"] .record-orb {
+  box-shadow:
+    0 0 0 10px var(--primary-soft),
+    0 0 0 22px color-mix(in srgb, var(--primary) 18%, transparent);
+}
+.speaking-prompt > p[role="status"] {
+  text-align: center;
+  font-size: 12px;
+  color: var(--muted);
+}
+.listening-page audio {
+  border-radius: 14px;
+}
+.listening-question {
+  padding: 16px;
+  border-radius: 12px;
+  background: var(--surface-muted);
+}
+@media (max-width: 1100px) {
+  .hub-local-label {
+    display: none;
+  }
+  .workspace-learning,
+  .hub-bottom {
+    grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+    gap: 16px;
+  }
+  .hub-quiet-link {
+    display: none;
+  }
+}
+@media (max-width: 900px) {
+  body {
+    background: var(--bg);
+    padding-top: 76px;
+    padding-bottom: 80px;
+  }
+  body::before {
+    display: none;
+  }
+  .hub-header.app-header {
+    inset: 0 0 auto;
+    border-radius: 0;
+    height: 72px;
+    padding: 12px 20px;
+    border-bottom: 1px solid var(--border);
+  }
+  .hub-header .brand {
+    width: auto;
+    font-size: 20px;
+  }
+  .hub-header .brand small {
+    font-size: 9px;
+  }
+  .brand-symbol {
+    width: 32px;
+    height: 32px;
+  }
+  .hub-sidebar {
+    top: 72px;
+    left: 0;
+    bottom: 76px;
+    width: 240px;
+    border-radius: 0;
+    background: var(--surface);
+  }
+  body main#main,
+  body > .learning-guide,
+  body > .demo-banner,
+  body > .theme-error {
+    margin-left: 24px;
+    margin-right: 24px;
+  }
+  body main#main {
+    padding-top: 24px;
+  }
+  .hub-mobile-nav {
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+  }
+  .hub-mobile-nav a[aria-current="page"] {
+    color: var(--primary);
+  }
+}
+@media (max-width: 600px) {
+  .hub-header.app-header {
+    padding: 10px 16px;
+  }
+  .hub-header-actions {
+    gap: 7px;
+  }
+  .theme-control select {
+    max-width: 76px;
+    padding: 7px;
+    font-size: 11px;
+  }
+  .focus-toggle,
+  .hub-menu-toggle {
+    padding: 7px 8px;
+    font-size: 11px;
+  }
+  body main#main,
+  body > .learning-guide,
+  body > .demo-banner,
+  body > .theme-error {
+    margin-left: 16px;
+    margin-right: 16px;
+  }
+  .hub-heading h1 {
+    font-size: 28px;
+    line-height: 1.3;
+  }
+  .hub-heading .welcome-greeting {
+    font-size: 13px;
+  }
+  .hub-heading p {
+    font-size: 12px;
+  }
+  .welcome-landscape {
+    width: 100%;
+    height: 180px;
+    top: 36px;
+    right: 0;
+    opacity: 0.7;
+  }
+  .workspace-launcher {
+    padding-left: 12px;
+    margin-top: 18px;
+    gap: 8px;
+  }
+  .workspace-launcher input:not([type="radio"]):not([type="checkbox"]) {
+    font-size: 12px;
+  }
+  .workspace-launcher button {
+    width: 36px;
+    height: 36px;
+  }
+  .workspace-welcome .hub-skills.compact {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 7px;
+  }
+  .workspace-welcome .hub-skill {
+    flex-direction: column;
+    gap: 5px;
+    padding: 10px 4px;
+  }
+  .workspace-welcome .hub-skills.compact .skill-name {
+    font-size: 10px;
+  }
+  .workspace-learning,
+  .hub-bottom {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+  .hub-next {
+    padding: 22px;
+  }
+  .hub-empty {
+    min-height: 0;
+  }
+  .hub-counts {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 8px;
+  }
+  .hub-counts dd {
+    font-size: 21px;
+  }
+  .hub-band-note {
+    padding: 20px;
+  }
+  .passage-pane,
+  .questions-pane {
+    padding: 20px;
+  }
+  .writing-editor-pane,
+  .writing-question-pane {
+    padding: 16px;
+  }
+  .writing-editor-pane .essay-input {
+    min-height: 350px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  button {
+    transition: none;
+  }
+}
+
+/* Opt-in distraction-free practice; the menu remains keyboard-accessible. */
+body:has(.hub-header[data-focus="true"]) .hub-menu-toggle {
+  display: block;
+}
+body:has(.hub-header[data-focus="true"]) .hub-sidebar:not([data-open="true"]) {
+  display: none;
+}
+@media (min-width: 901px) {
+  body:has(.hub-header[data-focus="true"]) main#main,
+  body:has(.hub-header[data-focus="true"]) > .demo-banner,
+  body:has(.hub-header[data-focus="true"]) > .theme-error {
+    margin-left: 64px;
+    margin-right: 64px;
+  }
+  body:has(.hub-header[data-focus="true"]) .hub-sidebar[data-open="true"] {
+    background: var(--surface);
+    box-shadow: 10px 0 30px #19192f10;
+  }
+}

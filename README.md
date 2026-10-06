@@ -1,10 +1,28 @@
 # MaKeng
 
+### Cập nhật trải nghiệm web local
+
+**Tài liệu nguồn mở** tại `/sources`: 3 trích đoạn Reading (VOA/Wikipedia/Aesop), 1 hội thoại VOA với MP3 local và transcript, nút tải JSON gồm văn bản/credit/license và tải audio riêng. Manifest: `packages/content/open-starter.json`. Đây là tài liệu nguồn, chưa phải bài IELTS có đáp án được duyệt. Common Voice/LibriVox được ghi rõ chưa nhập; không đảm bảo mọi nguồn miễn phí đều được dùng thương mại. Xem [ADR 0011](docs/decisions/0011-open-content-starter-pack.md).
+
+Concept **IELTS Learning Hub**: Home tại `/` ưu tiên bài đang học dở và bước luyện tiếp theo; `/practice` mở bốn kỹ năng; Writing chuyển sang `/writing`. Có sidebar desktop, điều hướng mobile, theme Sáng/Tối/Theo hệ thống và Writing split-screen. Home không hiển thị band/streak giả; Vocabulary tự động, AI thật và Mock Test đầy đủ chưa triển khai. Bookmark Writing cũ `/?practice=1` hoặc `/?submission=…` vẫn mở được. Xem [ADR 0010](docs/decisions/0010-learning-hub-shell.md).
+
+Writing/Speaking mở thư viện chọn đề trước khi làm bài. Writing có tìm kiếm, 5 đề Task 2 và Academic Task 1 (4 bảng số liệu gốc, 150+ từ, chưa chấm điểm). Có đề ngẫu nhiên trong danh sách đang xem; Listening chọn từ bài đã lưu. Speaking có 5 chủ đề, đọc câu hỏi bằng giọng tiếng Anh local, tốc độ đọc và che/hiện chữ. Giọng đọc cần hệ điều hành/trình duyệt cung cấp English local; khi thiếu giọng, app vẫn hỗ trợ luyện bằng chữ. Không gửi audio hoặc văn bản đến dịch vụ TTS từ xa. Xem [ADR 0009](docs/decisions/0009-practice-library-and-local-speech.md) và ADR 0011 cho phần mở rộng catalog.
+
 Không gian luyện IELTS độc lập. Mặc định là demo Writing, Reading, Listening, Speaking và Tạo đề lưu trong trình duyệt, không cần API AI hoặc database. Chế độ API SQLite + worker cũ vẫn dùng được khi đặt `NEXT_PUBLIC_MAKENG_DEMO=false` trước khi chạy/build.
 
 **Hướng hiện tại: web chạy local, chưa public.** Không cần Vercel, Supabase hoặc Expo để tiếp tục phát triển. Chạy trên máy của bạn theo mục [Chạy local](#chạy-local); `dev` và `start` chỉ lắng nghe ở `127.0.0.1`. Không tự push hoặc deploy trong giai đoạn này. Quyết định tại [ADR 0007](docs/decisions/0007-local-only-development.md).
 
-Giao diện gồm **Writing**, **Reading**, **Listening**, **Speaking**, **Tạo đề** và **Tiến độ**. Writing có một cột. Reading tại `/reading` có 5 bài mẫu gốc, mỗi bài 5 câu: trắc nghiệm, True/False/Not Given và điền từ. Bài mẫu có tình huống hư cấu, chưa được giáo viên duyệt hoặc hiệu chuẩn độ khó IELTS.
+Giao diện gồm **Home**, **Practice**, **Writing**, **Reading**, **Listening**, **Speaking**, **Tạo đề**, **Tiến độ** và **Sao lưu**. Writing desktop chia đề/bài viết, mobile một cột. Reading tại `/reading` có 5 bài mẫu gốc, mỗi bài 5 câu: trắc nghiệm, True/False/Not Given và điền từ. Bài mẫu có tình huống hư cấu, chưa được giáo viên duyệt hoặc hiệu chuẩn độ khó IELTS.
+
+## Sao lưu & khôi phục local
+
+Mở **Sao lưu** (`/backup`) để quản lý ba nhóm độc lập:
+
+- **Writing/Reading/Tạo đề/Tiến độ:** xuất JSON tối đa 10 MiB, chọn file, kiểm tra số bài và xác nhận khôi phục. Hỗ trợ export schema v1/v2 cũ. Thêm bài, lượt đang làm, nguồn tạo đề, phiên bản đã tự duyệt và trạng thái ôn lỗi; không ghi đè mục có cùng mã hoặc content version trên thiết bị. Giữ thiết lập gợi ý hiện có; trình duyệt mới dùng thiết lập của bản sao.
+- **Speaking:** mỗi phiên xuất một JSON mới chứa cả audio, transcript, checklist và đề, tối đa 140 MiB. Kiểm tra schema, kích thước, MIME và checksum audio, chọn hạn lưu 1/7/30 ngày và đồng ý lưu. Tạo ID mới, giữ ngày luyện/hoàn tất, khóa text của phiên đã hoàn tất và chặn nhập trùng snapshot. Thời lượng ghi âm vẫn là metadata wall-time của recorder.
+- **Listening:** tải cả JSON và audio riêng của từng bài, rồi dùng form khôi phục ngay trong trang Sao lưu. Audio phải khớp checksum và timestamp của JSON.
+
+Chỉ sao lưu dữ liệu đã lưu thành công. Nháp Writing trên editor, audio mới trong RAM, SQLite và audio đã hết hạn không nằm trong các bản sao này. JSON Speaking cũ chỉ có metadata không nhập được ở form mới. File chứa nội dung riêng tư, chưa được mã hóa; file đã tải do bạn quản lý, không tự bị xóa theo hạn lưu trong app. Khôi phục từng nhóm độc lập, không có transaction chung giữa localStorage và hai IndexedDB. Xem [ADR 0008](docs/decisions/0008-local-backup-and-restore.md).
 
 ## Phase 6 — Speaking trên thiết bị
 
@@ -32,7 +50,7 @@ xóa nền khi trình duyệt đã đóng. Thời lượng thu là ước tính 
 phải độ dài speech được xác minh qua giải mã.
 
 **Xuất JSON đã lưu** giữ metadata/transcript/checklist; **Tải audio** tải từng
-bản ghi riêng. JSON chưa có import/restore; Writing/Tạo đề export không chứa
+bản ghi riêng. JSON cũ này không có import/restore; mục Sao lưu xuất định dạng mới gồm audio có thể khôi phục. Writing/Tạo đề export không chứa
 Speaking. File đã tải nằm ngoài quyền xóa của app. Xóa toàn bộ demo ở Writing
 hoặc Tạo đề xóa cả Listening và Speaking trước localStorage; ba store không
 có transaction chung, lỗi ở bước sau có thể khiến xóa một phần, hãy thử lại.
@@ -60,7 +78,7 @@ Audio riêng được giữ dưới dạng Blob trong IndexedDB, cùng transcrip
 
 Mỗi bài có **Xuất bài & lịch sử JSON** và **Tải audio** riêng. Mở **Khôi phục bản sao lưu Listening**, chọn hai file và kiểm tra tiêu đề/lượt luyện trước khi xác nhận quyền sử dụng cùng hạn lưu mới. JSON mới có envelope version 1; JSON cũ từ Listening vẫn dùng được. Giới hạn JSON 10 MiB và audio 20 MiB; file audio phải khớp SHA-256, kích thước và timestamp, tên file có thể khác. Khôi phục tạo bản riêng với ID mới, giữ nội dung, điểm và câu trả lời dang dở; không gộp/ghi đè bài cũ. Bản trùng bị chặn, kể cả khi hai tab khôi phục đồng thời. Bản sao lưu hết hạn có thể khôi phục sau khi chọn hạn lưu mới. Xóa toàn bộ trong lúc khôi phục sẽ chờ kiểm tra/lưu xong rồi xóa cả bản vừa khôi phục.
 
-JSON export ở Tạo đề không chứa Listening/audio và vẫn chưa có restore Writing/Reading. Bản tải về do người dùng quản lý, không bị xóa từ app. Không có đồng bộ thiết bị, mã hóa riêng, tài khoản hoặc dịch vụ STT thật. Nội dung/người kiểm duyệt trong JSON là thông tin tự khai, không phải xác nhận giáo viên; file nhập phải có nguồn và dẫn chứng hợp lệ. Transcript/timestamp chưa đạt benchmark có người kiểm tra; bài riêng tự kiểm duyệt không thay thế giáo viên. Listening chưa gộp vào Tiến độ Reading. Xem [ADR 0005](docs/decisions/0005-listening-demo.md), [nguồn audio](docs/listening-audio-credits.md) và [kiểm thử](docs/validation-listening.md).
+JSON export ở Tạo đề không chứa Listening/audio; khôi phục Writing/Reading tại mục Sao lưu. Bản tải về do người dùng quản lý, không bị xóa từ app. Không có đồng bộ thiết bị, mã hóa riêng, tài khoản hoặc dịch vụ STT thật. Nội dung/người kiểm duyệt trong JSON là thông tin tự khai, không phải xác nhận giáo viên; file nhập phải có nguồn và dẫn chứng hợp lệ. Transcript/timestamp chưa đạt benchmark có người kiểm tra; bài riêng tự kiểm duyệt không thay thế giáo viên. Listening chưa gộp vào Tiến độ Reading. Xem [ADR 0005](docs/decisions/0005-listening-demo.md), [nguồn audio](docs/listening-audio-credits.md) và [kiểm thử](docs/validation-listening.md).
 
 Work Phase 5 được build và review trong cloud bằng Chromium desktop/mobile trước triển khai. Không thể truy cập máy Windows của người dùng từ workspace này. Giữ branch local, không push/deploy cho đến khi người dùng duyệt.
 
@@ -95,7 +113,7 @@ Tại `/create`:
 4. Có thể từ chối kèm lý do, sửa lại, hoặc tạo lại tối đa 3 lần tổng cộng trên mỗi revision nội dung. Tạo lại thay thế câu hỏi và cần xác nhận.
 5. Nhập tên người tự duyệt, xác nhận kiểm tra, bấm **Duyệt bản nháp** rồi **Phát hành trên thiết bị**. Chỉ lúc này bài xuất hiện trong thư viện Reading; draft chưa duyệt không xuất hiện. Đây là self-review demo, không phải quyền reviewer được xác thực.
 6. Bản đã phát hành bị khóa; tạo phiên bản mới để sửa. Thư viện dùng bản published mới nhất; attempt đang làm giữ snapshot cũ. Nhật ký lưu thao tác, thời gian, tên reviewer/lý do.
-7. **Xuất dữ liệu demo** tải JSON để sao lưu (chưa có UI import/restore); **Xóa dữ liệu demo** xóa bộ nhớ demo và bản nháp luyện tập sau xác nhận. Writing cũng có xóa toàn bộ dữ liệu phiên.
+7. **Xuất dữ liệu demo** tải JSON để sao lưu (khôi phục ở mục Sao lưu); **Xóa dữ liệu demo** xóa bộ nhớ demo và bản nháp luyện tập sau xác nhận. Writing cũng có xóa toàn bộ dữ liệu phiên.
 
 AI quality evaluator, durable generation jobs, Supabase/RLS, benchmark giáo viên và shared publish chưa triển khai. Xem [ADR 0003](docs/decisions/0003-browser-demo-and-review.md).
 
@@ -126,6 +144,18 @@ pnpm dev
 ```
 
 Lệnh `dev` chạy Next.js demo trên loopback port 3000, không chạy worker. Trên chính máy chạy lệnh, mở `http://127.0.0.1:3000`. Dừng bằng Ctrl+C. Dùng cùng trình duyệt, hostname và port để truy cập lại dữ liệu; `localhost:3000` và `127.0.0.1:3000` có bộ nhớ riêng.
+
+Trên Windows, sau khi đã có dependency, có thể chạy launcher PowerShell từ root repo. Launcher kiểm tra Node 24, dùng trực tiếp Next.js đã cài, không phụ thuộc `pnpm` có trong PATH, và giữ cố định hostname/port:
+
+```powershell
+pwsh -File .\scripts\start-local.ps1 -Rebuild
+# Các lần sau, dùng lại production build:
+pwsh -File .\scripts\start-local.ps1
+# Khi phát triển:
+pwsh -File .\scripts\start-local.ps1 -Mode dev
+```
+
+Launcher không tự cài dependency hoặc mở trình duyệt. Giữ cửa sổ chạy lệnh mở trong lúc học.
 
 Đây là chế độ có đầy đủ các màn hình hiện tại. Nếu đã bật `NEXT_PUBLIC_MAKENG_DEMO=false`, bỏ cấu hình đó trước khi chạy/build lại (PowerShell: `Remove-Item Env:NEXT_PUBLIC_MAKENG_DEMO -ErrorAction SilentlyContinue`; bash: `unset NEXT_PUBLIC_MAKENG_DEMO`). Chạy local không đồng nghĩa khởi động hoàn toàn offline; chưa có offline app cache. Dữ liệu trình duyệt không phải bản backup: export trước khi xóa dữ liệu website, đổi origin hoặc đổi trình duyệt.
 
@@ -197,15 +227,15 @@ Các test kiểm tra consent/schema, evidence, tính band, ownership, idempotenc
 
 ## API hiện có (chỉ khi tắt demo)
 
-| Method | Endpoint | Hành vi |
-| --- | --- | --- |
-| GET | `/api/v1/session` | Tạo/khôi phục phiên local và trả thư viện đề |
-| DELETE | `/api/v1/session` | Xóa phiên, bài, kết quả và model runs liên quan |
-| POST | `/api/v1/writing/submissions` | Lưu bài + enqueue job, trả `202` và `jobId` |
-| GET | `/api/v1/writing/submissions?offset=0` | Lịch sử phân trang, tối đa 20 bài/trang |
-| GET/DELETE | `/api/v1/writing/submissions/:id` | Xem hoặc xóa bài của phiên hiện tại |
-| POST | `/api/v1/writing/submissions/:id/retry` | Thử lại bài lỗi khi chưa quá 3 attempts |
-| GET | `/api/v1/jobs/:id` | Trạng thái job và kết quả, không chạy job trong GET |
+| Method     | Endpoint                                | Hành vi                                             |
+| ---------- | --------------------------------------- | --------------------------------------------------- |
+| GET        | `/api/v1/session`                       | Tạo/khôi phục phiên local và trả thư viện đề        |
+| DELETE     | `/api/v1/session`                       | Xóa phiên, bài, kết quả và model runs liên quan     |
+| POST       | `/api/v1/writing/submissions`           | Lưu bài + enqueue job, trả `202` và `jobId`         |
+| GET        | `/api/v1/writing/submissions?offset=0`  | Lịch sử phân trang, tối đa 20 bài/trang             |
+| GET/DELETE | `/api/v1/writing/submissions/:id`       | Xem hoặc xóa bài của phiên hiện tại                 |
+| POST       | `/api/v1/writing/submissions/:id/retry` | Thử lại bài lỗi khi chưa quá 3 attempts             |
+| GET        | `/api/v1/jobs/:id`                      | Trạng thái job và kết quả, không chạy job trong GET |
 
 Mutation cần cùng origin với web; POST submission cần header `Idempotency-Key` dạng UUID và JSON `{ prompt, essay, consent: true }`. Giới hạn payload 64 KB, đề 3.000 ký tự, bài 20.000 ký tự, 10 yêu cầu tạo/thử lại mỗi giờ mỗi phiên. Retry transient dùng backoff + jitter; validation failure không tự retry. Worker timeout 30 giây, lease 60 giây, tối đa 3 attempts. `model_runs` ghi hash input, phiên bản, token usage, latency và cost (mock bằng 0).
 

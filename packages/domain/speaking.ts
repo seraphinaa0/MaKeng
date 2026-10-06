@@ -24,6 +24,7 @@ export function newSpeaking(
   now: string,
   days: 1 | 7 | 30,
   consent: boolean,
+  set: SpeakingSession["set"] = speakingPreview,
 ): SpeakingSession {
   if (!consent) throw new Error("Cần đồng ý lưu dữ liệu trên thiết bị trước.");
   return speakingSessionSchema.parse({
@@ -36,7 +37,7 @@ export function newSpeaking(
     consent: "local-only-speaking",
     status: "in_progress",
     completedAt: null,
-    set: speakingPreview,
+    set,
     responses: {},
   });
 }

@@ -47,9 +47,10 @@ test.beforeEach(async ({ context }) => {
 });
 async function start(page: Page, days = "7") {
   await page.goto("/speaking");
-  await expect(
-    page.getByText("Chưa có lượt luyện.", { exact: false }),
-  ).toBeVisible();
+  await page
+    .getByRole("button", { name: "Chọn bộ đề này →", exact: true })
+    .first()
+    .click();
   await expect(
     page.getByRole("button", { name: "Bắt đầu Speaking" }),
   ).toBeDisabled();
@@ -207,6 +208,9 @@ test("review regression: expiry releases microphone even when storage cleanup fa
     db.close();
   });
   await page.reload();
+  await page
+    .getByRole("button", { name: "Lịch sử Speaking", exact: true })
+    .click();
   await page.getByRole("button", { name: "Tiếp tục luyện" }).click();
   await page.getByRole("button", { name: "Ghi âm", exact: true }).click();
   await expect(page.getByText(/Đang ghi âm · [1-9]/)).toBeVisible();
@@ -249,6 +253,10 @@ test("review regression: another session changing preserves current playback URL
     .evaluate((audio: HTMLAudioElement) => audio.play());
   const other = await context.newPage();
   await other.goto("/speaking");
+  await other
+    .getByRole("button", { name: "Chọn bộ đề này →", exact: true })
+    .first()
+    .click();
   await other.getByRole("checkbox").check();
   await other.getByRole("button", { name: "Bắt đầu Speaking" }).click();
   await expect(other.getByLabel("Transcript nhập tay")).toBeVisible();
@@ -305,6 +313,9 @@ test("stale tab without notifications cannot overwrite a saved response; corrupt
     Object.defineProperty(window, "BroadcastChannel", { value: undefined }),
   );
   await other.goto("/speaking");
+  await other
+    .getByRole("button", { name: "Lịch sử Speaking", exact: true })
+    .click();
   await other.getByRole("button", { name: "Tiếp tục luyện" }).click();
   await other
     .getByLabel("Transcript nhập tay")
@@ -342,6 +353,9 @@ test("stale tab without notifications cannot overwrite a saved response; corrupt
     db.close();
   });
   await page.reload();
+  await page
+    .getByRole("button", { name: "Lịch sử Speaking", exact: true })
+    .click();
   await expect(page.getByRole("main").getByRole("alert")).toContainText(
     "không hợp lệ",
   );
@@ -390,6 +404,9 @@ test("Speaking: explicit capture, playback, save/reload, manual review, completi
     ),
   ).toBe(true);
   await page.reload();
+  await page
+    .getByRole("button", { name: "Lịch sử Speaking", exact: true })
+    .click();
   await page.getByRole("button", { name: "Tiếp tục luyện" }).click();
   await expect(page.getByLabel("Transcript nhập tay")).toHaveValue(
     "I usually learn at the library because it is quiet.",
@@ -553,6 +570,9 @@ test("cross-tab deletion discards pending recording and revokes playback; global
   await page.getByRole("button", { name: "Lưu câu trả lời" }).click();
   const other = await context.newPage();
   await other.goto("/speaking");
+  await other
+    .getByRole("button", { name: "Lịch sử Speaking", exact: true })
+    .click();
   await other.getByRole("button", { name: "Tiếp tục luyện" }).click();
   await expect(other.getByLabel("Nghe lại câu trả lời")).toHaveAttribute(
     "src",
@@ -583,12 +603,24 @@ test("cross-tab deletion discards pending recording and revokes playback; global
     )
     .toBe(false);
   await other.close();
+  await page
+    .getByRole("button", { name: "Thư viện đề nói", exact: true })
+    .click();
+  await page
+    .getByRole("button", { name: "Chọn bộ đề này →", exact: true })
+    .first()
+    .click();
+  await page.getByRole("checkbox").check();
   await page.getByRole("button", { name: "Bắt đầu Speaking" }).click();
   await expect(page.getByLabel("Transcript nhập tay")).toBeVisible();
-  await page.goto("/");
+  await page.goto("/?practice=1");
   await page.getByRole("button", { name: "Lịch sử bài viết" }).click();
   await page.getByRole("button", { name: "Xóa dữ liệu phiên này" }).click();
   await page.getByRole("button", { name: "Xác nhận xóa" }).click();
+  await expect(page).toHaveURL(/\/writing$/);
+  await expect(
+    page.getByRole("heading", { name: "Hôm nay bạn muốn viết gì?" }),
+  ).toBeVisible();
   await expect.poll(async () => (await records(page)).length).toBe(0);
 });
 
@@ -618,6 +650,9 @@ test("expiration purges private data; blocked storage reports an error without p
     db.close();
   });
   await page.reload();
+  await page
+    .getByRole("button", { name: "Lịch sử Speaking", exact: true })
+    .click();
   await expect(
     page.getByText("Chưa có lượt luyện.", { exact: false }),
   ).toBeVisible();

@@ -17,11 +17,13 @@ export default function ReadingPlayer({
   sessionId,
   onSubmitted,
   onReload,
+  onHistory,
 }: {
   initial: ReadingAttempt;
   sessionId: string;
   onSubmitted: (item: ReadingAttempt) => void;
   onReload: () => Promise<void>;
+  onHistory: () => void;
 }) {
   const [edits, setEdits] = useState<Edits>({
     answers: initial.answers,
@@ -40,6 +42,33 @@ export default function ReadingPlayer({
   const [recovered, setRecovered] = useState<Edits | null>(null);
   const [panel, setPanel] = useState<"passage" | "questions">("passage");
   const [highlight, setHighlight] = useState<Solution["evidence"] | null>(null);
+  const [questionIndex, setQuestionIndex] = useState(0);
+  const [notesOpen, setNotesOpen] = useState(false);
+  const [note, setNote] = useState("");
+  const [noteStatus, setNoteStatus] = useState("");
+  const questionsPane = useRef<HTMLElement>(null);
+  useEffect(() => {
+    try {
+      setNote(
+        localStorage.getItem(
+          `makeng-reading-${sessionId}-note-${initial.id}`,
+        ) ?? "",
+      );
+    } catch {
+      setNoteStatus("Không đọc được ghi chú local.");
+    }
+  }, [initial.id, sessionId]);
+  function moveQuestion(index: number) {
+    setQuestionIndex(index);
+    setPanel("questions");
+    requestAnimationFrame(() => {
+      const target = document.getElementById(
+        `question-${initial.content.questions[index].id}`,
+      );
+      target?.scrollIntoView({ block: "start" });
+      target?.focus({ preventScroll: true });
+    });
+  }
   const cacheKey = `makeng-reading-${sessionId}-${initial.id}`;
   const submitted = initial.status === "submitted";
   const answered = initial.content.questions.filter((q) =>
@@ -291,10 +320,7 @@ export default function ReadingPlayer({
             aria-label={`Câu ${i + 1}${edits.answers[q.id] ? ", đã trả lời" : ", chưa trả lời"}${edits.flagged.includes(q.id) ? ", xem lại" : ""}`}
             className={edits.answers[q.id] ? "answered" : ""}
             onClick={() => {
-              setPanel("questions");
-              requestAnimationFrame(() =>
-                document.getElementById(`question-${q.id}`)?.focus(),
-              );
+              moveQuestion(i);
             }}
           >
             {i + 1}
@@ -308,7 +334,7 @@ export default function ReadingPlayer({
       </div>
       <div className="reading-layout" data-panel={panel}>
         <section className="card passage-pane" aria-label="Bài đọc">
-          <h3>Bài đọc</h3>
+          <h3>{initial.content.title}</h3>
           {initial.content.paragraphs.map((p, i) => (
             <p key={p.id} id={`passage-${p.id}`} tabIndex={-1} lang="en">
               <strong>{String.fromCharCode(65 + i)}. </strong>
@@ -327,9 +353,79 @@ export default function ReadingPlayer({
             Nội dung mẫu gốc của MaKeng · v{initial.content.version} · chưa được
             giáo viên duyệt.
           </small>
+          <div className="passage-tools">
+            <button
+              onClick={() => {
+                const selected = window.getSelection()?.toString().trim() ?? "";
+                const paragraph = initial.content.paragraphs.find(
+                  (item) => selected && item.text.includes(selected),
+                );
+                if (!paragraph) {
+                  setNoteStatus(
+                    "Chọn một đoạn chữ trong bài đọc trước khi highlight.",
+                  );
+                  setNotesOpen(true);
+                  return;
+                }
+                const start = paragraph.text.indexOf(selected);
+                setHighlight({
+                  blockId: paragraph.id,
+                  start,
+                  end: start + selected.length,
+                  quote: selected,
+                });
+              }}
+            >
+              ✎ Highlight
+            </button>
+            <button onClick={() => setNotesOpen(!notesOpen)}>▣ Add note</button>
+          </div>
+          {notesOpen && (
+            <div className="reading-notes">
+              <label>
+                Notes
+                <textarea
+                  aria-label="Notes"
+                  value={note}
+                  maxLength={20000}
+                  onChange={(e) => setNote(e.target.value)}
+                />
+              </label>
+              <button
+                onClick={() => {
+                  try {
+                    localStorage.setItem(
+                      `makeng-reading-${sessionId}-note-${initial.id}`,
+                      note,
+                    );
+                    setNoteStatus("Đã lưu ghi chú trên trình duyệt này.");
+                  } catch {
+                    setNoteStatus(
+                      "Chưa lưu được ghi chú. Hãy sao chép trước khi rời trang.",
+                    );
+                  }
+                }}
+              >
+                Save note
+              </button>
+              <p role="status">{noteStatus}</p>
+            </div>
+          )}
         </section>
-        <section className="card questions-pane" aria-label="Câu hỏi">
-          <h3>Câu hỏi</h3>
+        <section
+          className="card questions-pane"
+          aria-label="Câu hỏi"
+          ref={questionsPane}
+          onFocusCapture={(event) => {
+            const field = (event.target as HTMLElement).closest<HTMLElement>(
+              "fieldset[data-question-index]",
+            );
+            if (field) setQuestionIndex(Number(field.dataset.questionIndex));
+          }}
+        >
+          <h3>
+            Question {questionIndex + 1} of {total}
+          </h3>
           {initial.content.questions.map((q, i) => {
             const review = initial.result?.questions.find(
               (result) => result.questionId === q.id,
@@ -343,6 +439,7 @@ export default function ReadingPlayer({
                   submitted || busy || !!recovered || conflicted.current
                 }
                 className="question"
+                data-question-index={i}
               >
                 <legend>
                   {i + 1}. {q.prompt}
@@ -466,6 +563,27 @@ export default function ReadingPlayer({
           )}
         </section>
       </div>
+      <div className="reading-pagination">
+        <button
+          disabled={questionIndex === 0}
+          onClick={() => moveQuestion(questionIndex - 1)}
+        >
+          ← Previous
+        </button>
+        <span>
+          {questionIndex + 1} / {total}
+        </span>
+        <button
+          className="primary"
+          disabled={questionIndex === total - 1}
+          onClick={() => moveQuestion(questionIndex + 1)}
+        >
+          Next →
+        </button>
+      </div>
+      <button className="reading-history-link" onClick={onHistory}>
+        Lịch sử Reading
+      </button>
       {!submitted && (
         <div className="reading-submit">
           <span role="status">{saveState}</span>

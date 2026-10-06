@@ -32,6 +32,18 @@ export default function ProgressStudio() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const request = useRef(0);
+  useEffect(() => {
+    const query = new URLSearchParams(window.location.search);
+    if (query.get("review") !== "1") return;
+    setView("mistakes");
+    const selectedType = query.get("type");
+    if (
+      selectedType === "mcq" ||
+      selectedType === "tfng" ||
+      selectedType === "completion"
+    )
+      setType(selectedType);
+  }, []);
   const reload = useCallback(async () => {
     const id = ++request.current;
     setLoading(true);
@@ -143,8 +155,7 @@ export default function ProgressStudio() {
   return (
     <main id="main" className="progress-page">
       <div className="page-heading">
-        <h1>Tiến độ luyện tập</h1>
-        <p>Xem bài đã làm, ôn lỗi và chọn bước luyện tiếp theo.</p>
+        <h1>Your progress</h1>
       </div>
       <div className="toolbar">
         <button
@@ -192,6 +203,98 @@ export default function ProgressStudio() {
         <>
           {view === "overview" ? (
             <>
+              <section
+                className="lumen-progress-chart"
+                aria-label="Reading accuracy over recent submitted attempts"
+              >
+                <div className="section-heading">
+                  <h2>Reading accuracy</h2>
+                  <small>Practice accuracy · not IELTS band</small>
+                </div>
+                {data.recent.length ? (
+                  <>
+                    <svg
+                      viewBox="0 0 600 220"
+                      role="img"
+                      aria-label="Tỷ lệ đúng của các bài Reading đã nộp"
+                    >
+                      {[0, 25, 50, 75, 100].map((value) => (
+                        <g key={value}>
+                          <line
+                            x1="42"
+                            y1={185 - value * 1.5}
+                            x2="578"
+                            y2={185 - value * 1.5}
+                            stroke="var(--border)"
+                          />
+                          <text
+                            x="7"
+                            y={189 - value * 1.5}
+                            fill="var(--muted)"
+                            fontSize="10"
+                          >
+                            {value}%
+                          </text>
+                        </g>
+                      ))}
+                      <polyline
+                        fill="none"
+                        stroke="var(--primary)"
+                        strokeWidth="2"
+                        points={[...data.recent]
+                          .reverse()
+                          .map(
+                            (item, index) =>
+                              `${42 + index * (536 / Math.max(data.recent.length - 1, 1))},${185 - (item.score / item.total) * 150}`,
+                          )
+                          .join(" ")}
+                      />
+                      {[...data.recent].reverse().map((item, index) => (
+                        <g key={item.id}>
+                          <circle
+                            cx={
+                              42 +
+                              index *
+                                (536 / Math.max(data.recent.length - 1, 1))
+                            }
+                            cy={185 - (item.score / item.total) * 150}
+                            r="4"
+                            fill="var(--surface)"
+                            stroke="var(--primary)"
+                          >
+                            <title>
+                              {item.title}: {item.score}/{item.total}
+                            </title>
+                          </circle>
+                          <text
+                            x={
+                              42 +
+                              index *
+                                (536 / Math.max(data.recent.length - 1, 1))
+                            }
+                            y="212"
+                            textAnchor="middle"
+                            fill="var(--muted)"
+                            fontSize="10"
+                          >
+                            {new Date(item.at).toLocaleDateString("en-GB", {
+                              day: "numeric",
+                              month: "short",
+                            })}
+                          </text>
+                        </g>
+                      ))}
+                    </svg>
+                  </>
+                ) : (
+                  <div className="chart-empty">
+                    <span>—</span>
+                    <p>
+                      Complete a Reading session to start your progress chart.
+                    </p>
+                  </div>
+                )}
+              </section>
               <section
                 className="progress-stats"
                 aria-label="Thống kê hoạt động"
