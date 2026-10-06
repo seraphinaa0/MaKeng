@@ -1,5 +1,13 @@
 # MaKeng
 
+> **Trạng thái: Beta đang phát triển**
+>
+> MaKeng là nền tảng luyện IELTS độc lập, web-first, tập trung vào luyện tập có bằng chứng và lộ trình ôn lỗi cá nhân hóa.
+>
+> MaKeng **không phải sản phẩm IELTS chính thức** và không liên kết với British Council, IDP hoặc Cambridge University Press & Assessment. Mọi band estimate trong ứng dụng chỉ phục vụ luyện tập, không phải điểm thi chính thức.
+
+## Beta hiện có
+
 ### Cập nhật trải nghiệm web local
 
 **Tài liệu nguồn mở** tại `/sources`: 3 trích đoạn Reading (VOA/Wikipedia/Aesop), 1 hội thoại VOA với MP3 local và transcript, nút tải JSON gồm văn bản/credit/license và tải audio riêng. Manifest: `packages/content/open-starter.json`. Đây là tài liệu nguồn, chưa phải bài IELTS có đáp án được duyệt. Common Voice/LibriVox được ghi rõ chưa nhập; không đảm bảo mọi nguồn miễn phí đều được dùng thương mại. Xem [ADR 0011](docs/decisions/0011-open-content-starter-pack.md).
@@ -81,21 +89,26 @@ Mỗi bài có **Xuất bài & lịch sử JSON** và **Tải audio** riêng. M�
 JSON export ở Tạo đề không chứa Listening/audio; khôi phục Writing/Reading tại mục Sao lưu. Bản tải về do người dùng quản lý, không bị xóa từ app. Không có đồng bộ thiết bị, mã hóa riêng, tài khoản hoặc dịch vụ STT thật. Nội dung/người kiểm duyệt trong JSON là thông tin tự khai, không phải xác nhận giáo viên; file nhập phải có nguồn và dẫn chứng hợp lệ. Transcript/timestamp chưa đạt benchmark có người kiểm tra; bài riêng tự kiểm duyệt không thay thế giáo viên. Listening chưa gộp vào Tiến độ Reading. Xem [ADR 0005](docs/decisions/0005-listening-demo.md), [nguồn audio](docs/listening-audio-credits.md) và [kiểm thử](docs/validation-listening.md).
 
 Work Phase 5 được build và review trong cloud bằng Chromium desktop/mobile trước triển khai. Không thể truy cập máy Windows của người dùng từ workspace này. Giữ branch local, không push/deploy cho đến khi người dùng duyệt.
+MaKeng hiện cung cấp hai vertical slice chính:
 
-## Phase 4 — Tiến độ và ôn lỗi
+- **Writing Task 2**
+  - Chọn hoặc nhập đề.
+  - Soạn bài với word count và autosave.
+  - Nhận feedback theo bốn tiêu chí IELTS.
+  - Xem evidence, gợi ý cải thiện và lịch sử bài viết.
+  - Bản demo hiện dùng mock evaluator; điểm và nhận xét mẫu không phản ánh năng lực chấm AI thật.
 
-Mở **Tiến độ** (`/progress`) hoặc liên kết ở cuối phần kết quả Reading. Chỉ có trong demo trình duyệt, không đọc database SQLite cũ.
+- **Reading practice**
+  - Luyện Multiple Choice, True/False/Not Given và Sentence Completion.
+  - Lưu nháp, tiếp tục attempt và xem lại kết quả.
+  - Xem đáp án, giải thích và evidence được highlight.
+  - Hỗ trợ lịch sử, thống kê lỗi và ôn lại câu sai.
 
-- Lọc toàn bộ/7 ngày/30 ngày gần nhất, tính theo thời điểm nộp bài Reading. Đây là khoảng liên tục tính lùi từ lúc mở/cập nhật trang, không phải tuần/tháng lịch. Thống kê dùng toàn bộ lịch sử đã lưu, không chỉ trang đầu 20 bài.
-- Hiển thị số bài, tổng câu đúng/tổng câu, số lỗi chưa ôn và tỷ lệ đúng theo ba dạng. Bài chưa nộp không tham gia chấm điểm. Mỗi lượt làm lại đều được tính, nên tỷ lệ đúng không thể coi là phép đo năng lực đã hiệu chuẩn.
-- Khi đủ 6 bài có cùng dạng câu hỏi trong khoảng đã chọn, so sánh số đúng/tổng câu của 3 lượt gần nhất với 3 lượt trước. Hiển thị chênh lệch điểm phần trăm, không quy đổi sang band IELTS.
-- Writing chỉ thống kê số bài và số từ. Không vẽ xu hướng band/tiêu chí từ điểm mock 6.0.
-- Phân loại lỗi quan sát được: bỏ trống, vượt giới hạn từ, lựa chọn/TFNG/từ điền không khớp. Không tự kết luận nguyên nhân ngữ pháp hay từ vựng.
-- Gợi ý có lý do: tiếp tục bài chưa nộp, ôn lỗi, hoặc luyện bài có dạng cần xem lại. Ưu tiên phiên bản ít luyện; phân biệt bài mẫu preview. Có tắt/bật, bỏ qua và khôi phục gợi ý; lựa chọn lưu qua reload.
-- Mục **Ôn câu sai** cho lọc dạng, đọc lại nguồn và thử trả lời. Đúng thì chuyển sang **Đã ôn**; có thể đưa lại vào hàng đợi. Mỗi câu gắn với attempt/version gốc; ôn lại không đổi điểm bài đã nộp. Hai lần làm cùng câu là hai mục riêng.
-- Progress tự cập nhật khi quay lại cửa sổ hoặc dữ liệu thay đổi ở tab khác; có nút Cập nhật. Thao tác đồng thời kiểm tra revision trước khi lưu.
-
-Lưu trữ demo được nâng từ schema v1 lên v2, giữ nguyên khóa và bài cũ. Đọc không ghi đè dữ liệu; mutation thành công mới lưu phiên bản mới. Nếu đang mở tab từ bản deploy cũ, tải lại tab trước khi tiếp tục. Xóa dữ liệu phiên cũng xóa tiến độ, trạng thái ôn và thiết lập gợi ý; JSON export gồm các trường này. Không di chuyển SQLite hoặc đồng bộ thiết bị. Xem [ADR 0004](docs/decisions/0004-learning-loop.md).
+- **Tạo đề và review nội dung**
+  - Nhập văn bản do người dùng sở hữu hoặc có quyền sử dụng.
+  - Chuẩn hóa nguồn, tạo câu hỏi mẫu và chỉnh sửa trước khi phát hành.
+  - Có provenance, answer key, explanation và evidence.
+  - Nội dung chưa được review không được coi là nội dung beta đã publish.
 
 ## Demo trình duyệt và Phase 3
 
@@ -134,9 +147,32 @@ Migration `002-reading.sql` thêm bảng attempts và tự nâng database cũ; k
 
 **Hiện chỉ dùng mock evaluator. Điểm 6.0 và nhận xét mẫu không phản ánh chất lượng bài viết.** Không cần API key và không có dữ liệu gửi đến AI provider. Đây chưa phải bản beta public có đăng nhập tài khoản.
 
+## Tiến độ và giới hạn beta
+
+- **Tiến độ**
+  - Theo dõi các attempt Reading và Writing.
+  - Phân loại lỗi quan sát được.
+  - Đề xuất bước luyện tiếp theo theo dữ liệu thực tế.
+  - Không suy diễn band chính thức từ dữ liệu hạn chế.
+
+## Lưu ý quan trọng về bản beta
+
+- Chế độ mặc định lưu dữ liệu demo trong trình duyệt và không yêu cầu API key AI hoặc database.
+- Dữ liệu localStorage phụ thuộc vào browser và origin; đổi trình duyệt, domain hoặc xóa dữ liệu website có thể làm mất lịch sử demo.
+- Answer key trong chế độ browser demo có thể nằm trong bundle/storage, vì vậy chế độ này chỉ phù hợp để thử nghiệm, không phải hệ thống thi bảo mật.
+- Chế độ API SQLite + worker chỉ dành cho local development, không dành cho triển khai nhiều máy hoặc serverless production.
+- Chưa có Supabase Auth/PostgreSQL/RLS, reviewer roles cloud, AI provider thật, benchmark giáo viên hoặc đồng bộ dữ liệu giữa thiết bị.
+- AI-generated content không được tự động publish.
+- Không sử dụng đề IELTS/Cambridge chính thức hoặc nội dung bên thứ ba khi chưa có quyền sử dụng phù hợp.
+
 ## Chạy local
 
-Yêu cầu Node.js 24.x và pnpm 11.19.0. Node 24 cung cấp SQLite tích hợp; không cần cài Docker hoặc dịch vụ database để thử luồng này.
+### Yêu cầu
+
+- Node.js 24.x
+- pnpm 11.19.0
+
+### Cài đặt và chạy demo
 
 ```sh
 pnpm install --frozen-lockfile
@@ -159,50 +195,43 @@ Launcher không tự cài dependency hoặc mở trình duyệt. Giữ cửa s�
 
 Đây là chế độ có đầy đủ các màn hình hiện tại. Nếu đã bật `NEXT_PUBLIC_MAKENG_DEMO=false`, bỏ cấu hình đó trước khi chạy/build lại (PowerShell: `Remove-Item Env:NEXT_PUBLIC_MAKENG_DEMO -ErrorAction SilentlyContinue`; bash: `unset NEXT_PUBLIC_MAKENG_DEMO`). Chạy local không đồng nghĩa khởi động hoàn toàn offline; chưa có offline app cache. Dữ liệu trình duyệt không phải bản backup: export trước khi xóa dữ liệu website, đổi origin hoặc đổi trình duyệt.
 
+### Build và chạy production local
+
 ```sh
 pnpm build
 pnpm start
 ```
+
+### Chạy chế độ API SQLite + worker local
 
 `start` chạy web demo từ build trước đó. Chế độ API SQLite + worker cũ chỉ hỗ trợ Writing/Reading; Listening, Speaking, Tạo đề và Tiến độ hiện dùng chế độ demo trình duyệt. Để thử API cũ:
 
 ```sh
 export NEXT_PUBLIC_MAKENG_DEMO=false
 pnpm dev:local
-# Hoặc production local:
+```
+
+Hoặc chạy từ production build:
+
+```sh
+export NEXT_PUBLIC_MAKENG_DEMO=false
 pnpm build
 pnpm start:local
 ```
 
-Các lệnh `export` là cú pháp bash; PowerShell dùng `$env:NEXT_PUBLIC_MAKENG_DEMO="false"`. API và worker bên dưới chỉ áp dụng chế độ local. Không mở adapter SQLite ra Internet.
-
-Database mặc định nằm ở `.data/makeng.sqlite` tại root repo, ngoài Git. Migration `packages/db/migrations/001-writing.sql` chạy tự động khi mở database mới. Web và worker phải cùng truy cập một database. Nếu cần đường dẫn khác, đặt biến môi trường được export cho cả hai process:
+Database mặc định nằm tại `.data/makeng.sqlite` và không được commit vào Git. Có thể chỉ định đường dẫn khác:
 
 ```sh
 export MAKENG_DB_PATH=/absolute/path/to/makeng.sqlite
 pnpm dev:local
 ```
 
-`.env.example` chỉ mô tả biến tùy chọn; worker không tự đọc file `.env`.
+PowerShell:
 
-Trong cloud workspace có home directory chỉ đọc, dùng store tạm:
-
-```sh
-export pnpm_config_store_dir=/tmp/makeng-pnpm-store
-pnpm install --frozen-lockfile
-pnpm dev
+```powershell
+$env:NEXT_PUBLIC_MAKENG_DEMO="false"
+pnpm dev:local
 ```
-
-## Cách thử Writing
-
-1. Chọn một trong ba đề gốc hoặc nhập đề của bạn.
-2. Viết bài bằng tiếng Anh. Nháp tự lưu vào localStorage của trình duyệt; chờ nhãn “Đã lưu nháp” trước khi tải lại trang.
-3. Xác nhận lưu dữ liệu local và chọn “Lưu & xem phản hồi mẫu”.
-4. Demo lưu bài và phản hồi mẫu trong trình duyệt. Chế độ local dùng API lưu bài và job trong transaction rồi trả `202`; worker xử lý và UI cập nhật bằng polling.
-5. Xem bốn tiêu chí, trích dẫn nguyên văn, gợi ý luyện tập; mở lại bài từ lịch sử.
-6. Tải JSON của từng bài, xóa một bài hoặc xóa toàn bộ phiên từ lịch sử.
-
-Độ dài gợi ý Task 2 là 250 từ. Demo cho phép nộp bài ngắn (tối thiểu 30 ký tự) để thử luồng. Điểm mock không được dùng để tính tiến bộ năng lực.
 
 ## Kiểm thử
 
@@ -217,15 +246,38 @@ NEXT_PUBLIC_MAKENG_DEMO=true pnpm build
 pnpm test:e2e:demo
 ```
 
-E2E local khởi chạy web và worker riêng trên port 3100, dùng database tạm độc lập. E2E demo dùng production build trên port 3400, không worker, chặn mọi request `/api` để kiểm tra độc lập backend. Chạy tuần tự do dùng cùng thư mục build Next.js. Nếu Chromium đã có sẵn trên máy và download bị hạn chế:
+Test suite mặc định sử dụng mock provider; không cần API key AI thật.
 
-```sh
-PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium pnpm test:e2e
+## Kiến trúc
+
+MaKeng được tổ chức theo hướng **modular monolith** trong beta:
+
+```text
+Browser
+  ↓
+Next.js Web + API
+  ├── Writing
+  ├── Reading Practice
+  ├── Content Review
+  ├── Attempts / Progress
+  └── Job API
+          ↓
+      Background Worker
+          ├── AI provider adapter
+          ├── Prompt execution
+          ├── Schema validation
+          └── Quality checks
 ```
 
-Các test kiểm tra consent/schema, evidence, tính band, ownership, idempotency, rate limit, persistence qua connection mới, worker lease/retry/timeout, xóa bài đang xử lý, và luồng browser desktop/mobile. CI không gọi AI thật.
+Các nguyên tắc chính:
 
-## API hiện có (chỉ khi tắt demo)
+- UI không gọi trực tiếp AI provider.
+- Provider SDK chỉ nằm trong adapter AI hoặc worker.
+- External input được parse từ `unknown` và validate bằng schema.
+- AI output phải qua versioned schema validation trước khi lưu hoặc render.
+- Runtime Reading chỉ sử dụng content đã publish.
+- Job phải có timeout, retry có giới hạn và xử l�� idempotent.
+- Dữ liệu cá nhân và secret không được ghi vào log hoặc commit.
 
 | Method     | Endpoint                                | Hành vi                                             |
 | ---------- | --------------------------------------- | --------------------------------------------------- |
@@ -237,23 +289,38 @@ Các test kiểm tra consent/schema, evidence, tính band, ownership, idempotenc
 | POST       | `/api/v1/writing/submissions/:id/retry` | Thử lại bài lỗi khi chưa quá 3 attempts             |
 | GET        | `/api/v1/jobs/:id`                      | Trạng thái job và kết quả, không chạy job trong GET |
 
-Mutation cần cùng origin với web; POST submission cần header `Idempotency-Key` dạng UUID và JSON `{ prompt, essay, consent: true }`. Giới hạn payload 64 KB, đề 3.000 ký tự, bài 20.000 ký tự, 10 yêu cầu tạo/thử lại mỗi giờ mỗi phiên. Retry transient dùng backoff + jitter; validation failure không tự retry. Worker timeout 30 giây, lease 60 giây, tối đa 3 attempts. `model_runs` ghi hash input, phiên bản, token usage, latency và cost (mock bằng 0).
+## Phạm vi chưa triển khai trong beta
 
-## Dữ liệu và giới hạn chế độ API local
-
-- Phiên dùng cookie ngẫu nhiên HttpOnly, SameSite Strict; server lưu hash và kiểm tra ownership cho từng request. Đây không phải tài khoản Supabase. Phiên có hiệu lực 30 ngày tính từ lúc tạo; xóa cookie hoặc đổi trình duyệt sẽ không truy cập lại lịch sử cũ.
-- Bản nháp ở localStorage; bài đã nộp, consent version và kết quả ở SQLite. Không có encryption at rest hoặc cơ chế recovery tài khoản trong slice này.
-- Xóa bài loại bỏ record và model runs liên quan; xóa phiên còn xóa quota events. Đây là xóa logic khỏi database, không phải cam kết xóa vật lý khỏi mọi backup/WAL hoặc ổ đĩa. Chưa có automatic retention cleanup.
-- Nội dung đề là synthetic do MaKeng tạo, có nhãn provenance; chưa được giáo viên kiểm định. Không chứa đề Cambridge hoặc tài liệu tham khảo bên thứ ba.
-- Không chạy adapter SQLite trên Vercel/serverless hoặc nhiều máy. Chuyển sang PostgreSQL/RLS và Supabase Auth trước khi triển khai public.
-- Chưa có live AI adapter, prompt đã hiệu chuẩn, benchmark giáo viên, Reading được duyệt để phát hành public hoặc theo dõi band thực tế. Không có biến API key nào được sử dụng ở phiên bản này.
-- Accessibility đã có labels, focus, skip link và layout responsive; chưa tuyên bố đạt đầy đủ WCAG AA qua audit.
+- Speaking examiner hoàn chỉnh.
+- Listening generation và TTS tự động.
+- Native mobile app.
+- Fine-tuning model.
+- Marketplace, thanh toán hoặc tổ chức lớp học.
+- Tự động scrape và phát hành nội dung bên thứ ba.
+- Band score chính thức hoặc khả năng dự đoán điểm thi.
 
 ## Tài liệu
 
-- [Product](PRODUCT.md), [Architecture](ARCHITECTURE.md), [Design system](DESIGN_SYSTEM.md)
-- [AI rules](AI_RULES.md), [Roadmap](ROADMAP.md), [Agent instructions](AGENTS.md)
-- [ADR: local Writing slice](docs/decisions/0001-local-writing-slice.md)
-- [Phase 4 validation](docs/validation-learning.md)
+- [Product definition](PRODUCT.md)
+- [Architecture](ARCHITECTURE.md)
+- [Design system](DESIGN_SYSTEM.md)
+- [AI engineering rules](AI_RULES.md)
+- [Roadmap](ROADMAP.md)
+- [Agent instructions](AGENTS.md)
+- [ADR: Browser demo và review workflow](docs/decisions/0003-browser-demo-and-review.md)
+- [Validation cho learning loop](docs/validation-learning.md)
 
 Ưu tiên tiếp theo: hoàn thiện trải nghiệm web local, khả năng sao lưu/khôi phục và lưu trữ trên máy. Adapter AI thật là bước riêng khi cần; tài khoản cloud, beta public và native mobile được hoãn. Xem [hướng phát triển sau Phase 6](docs/phase7-readiness.md).
+
+## Đóng góp
+
+MaKeng đang ở giai đoạn beta nên API, schema và giao diện có thể thay đổi. Trước khi thay đổi kiến trúc hoặc hành vi sản phẩm, hãy đọc các tài liệu nguồn sự thật ở trên và giữ thay đổi trong vertical slice nhỏ nhất có thể kiểm chứng.
+
+Khi mở pull request, vui lòng kiểm tra:
+
+- Acceptance criteria và test liên quan.
+- Lint, typecheck, test và build phù hợp.
+- Authorization, loading, empty, error và responsive states.
+- Migration/RLS nếu có thay đổi database.
+- Provenance, quyền sử dụng nội dung và disclosure dữ liệu gửi tới AI.
+- Không có secret hoặc dữ liệu cá nhân trong code, fixture, log hay commit.
